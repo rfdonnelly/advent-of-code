@@ -10,6 +10,7 @@ fn main() -> io::Result<()> {
         .collect();
 
     println!("hash: {}", hashids(&ids));
+    println!("common letters: {}", part2(&ids));
 
     Ok(())
 }
@@ -57,12 +58,71 @@ fn hashids(ids: &[&str]) -> usize {
     hashprops(&props)
 }
 
+fn single_char_diff_pos(a: &str, b: &str) -> Option<usize> {
+    // Return None if strings differ by more than one char
+    let pairs = a.chars().zip(b.chars());
+
+    let mut diff_count = 0;
+    let mut diff_index = 0;
+
+    for pair in pairs.enumerate() {
+        let (i, (a, b)) = pair;
+
+        if a != b {
+            diff_index = i;
+
+            if diff_count == 1 {
+                return None;
+            } else {
+                diff_count += 1;
+            }
+        }
+    }
+
+    assert!(diff_count <= 1);
+
+    if diff_count > 0 {
+        Some(diff_index)
+    } else {
+        None
+    }
+}
+
+fn find_single_pair_with_single_char_diff(ids: &[&str]) -> Option<(String, String)> {
+    for a in ids {
+        for b in ids {
+            if a != b {
+                if let Some(_) = single_char_diff_pos(a, b) {
+                    return Some((a.to_string(), b.to_string()));
+                }
+            }
+        }
+    }
+
+    None
+}
+
+fn same_chars(a: String, b: String) -> String {
+    a.chars().zip(b.chars())
+        .filter(|(a, b)| a == b)
+        .map(|(a, _)| a)
+        .collect()
+}
+
+fn part2(ids: &[&str]) -> String {
+    if let Some((a, b)) = find_single_pair_with_single_char_diff(ids) {
+        same_chars(a, b)
+    } else {
+        "".into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn example() {
+    fn example1() {
         let inputs = vec![
             ("abcdef", IDProperties { has_two: false, has_three: false }),
             ("bababc", IDProperties { has_two: true, has_three: true }),
@@ -88,5 +148,27 @@ mod tests {
             .collect();
 
         assert_eq!(hashids(&ids), 12);
+    }
+
+    #[test]
+    fn example2() {
+        assert_eq!(single_char_diff_pos(&"abcde", &"axcye"), None);
+        assert_eq!(single_char_diff_pos(&"fghij", &"fguij"), Some(2));
+
+        let ids = vec!(
+            "abcde",
+            "fghij",
+            "klmno",
+            "pqrst",
+            "fguij",
+            "axcye",
+            "wvxyz",
+        );
+
+        assert_eq!(find_single_pair_with_single_char_diff(&ids), Some(("fghij".into(), "fguij".into())));
+
+        assert_eq!(same_chars("fghij".into(), "fguij".into()), "fgij".to_string());
+
+        assert_eq!(part2(&ids), "fgij".to_string());
     }
 }
