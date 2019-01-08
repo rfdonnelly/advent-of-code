@@ -1,0 +1,10 @@
+[package]
+name = "aoc3"
+version = "0.1.0"
+authors = ["Rob Donnelly <rfdonnelly@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+regex = "1"
+bit-vec = "0.5"
+itertools = "0.8"
