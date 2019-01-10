@@ -161,7 +161,13 @@ fn part2(lines: &[&str]) -> usize {
         .collect();
 
     rects.iter().find(|a| {
-        rects.iter().any(|b| a.intersection(b).is_some())
+        rects.iter().all(|b| {
+            if a.id == b.id {
+                true
+            } else {
+                a.intersection(b).is_none()
+            }
+        })
     }).unwrap().id
 }
 
