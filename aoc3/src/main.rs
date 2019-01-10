@@ -14,6 +14,7 @@ fn main() -> io::Result<()> {
         .collect();
 
     println!("overlap: {} squares", part1(&lines));
+    println!("no-overlap: {}", part2(&lines));
 
     Ok(())
 }
@@ -26,6 +27,7 @@ struct Point {
 
 #[derive(Debug, PartialEq)]
 struct Rect {
+    id: usize,
     left: usize,
     right: usize,
     top: usize,
@@ -35,11 +37,25 @@ struct Rect {
 impl Rect {
     fn new(left: usize, right: usize, top: usize, bottom: usize) -> Rect {
         Rect {
+            id: 0,
             left,
             right,
             top,
             bottom,
         }
+    }
+
+    fn from_str_with_id(s: &str) -> Rect {
+        let re = Regex::new(r"^#(\d+)").unwrap();
+        let captures = re.captures(s).unwrap();
+
+        let id = captures.get(1).unwrap().as_str().parse::<usize>().unwrap();
+
+        let mut rect = Rect::from_str(s);
+
+        rect.id = id;
+
+        rect
     }
 
     fn from_str(s: &str) -> Rect {
@@ -145,6 +161,16 @@ fn part1(lines: &[&str]) -> usize {
     fabric.count_marks()
 }
 
+fn part2(lines: &[&str]) -> usize {
+    let rects: Vec<Rect> = lines.iter()
+        .map(|line| Rect::from_str_with_id(line))
+        .collect();
+
+    rects.iter().find(|a| {
+        rects.iter().any(|b| a.intersection(b).is_some())
+    }).unwrap().id
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -223,5 +249,10 @@ mod tests {
             Rect::new(1, 3, 1, 3),
             Rect::new(2, 2, 2, 2),
             Some(Rect::new(2, 2, 2, 2)));
+    }
+
+    #[test]
+    fn part2_ids() {
+        assert_eq!(Rect::from_str_with_id("#4562 @ 1,1: 4x4").id, 4562);
     }
 }
