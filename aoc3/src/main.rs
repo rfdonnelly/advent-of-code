@@ -65,7 +65,7 @@ impl Rect {
         let top = cmp::max(self.top, b.top);
         let bottom = cmp::min(self.bottom, b.bottom);
 
-        if left < right && top < bottom {
+        if left <= right && top <= bottom {
             Some(Rect::new(left, right, top, bottom))
         } else {
             None
