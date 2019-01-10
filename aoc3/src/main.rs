@@ -133,15 +133,9 @@ impl Fabric {
     }
 
     fn count_marks(&self) -> usize {
-        let mut count = 0;
-
-        for cell in self.bv.iter() {
-            if cell {
-                count += 1;
-            }
-        }
-
-        count
+        self.bv.iter()
+            .filter(|b| *b)
+            .count()
     }
 }
 
