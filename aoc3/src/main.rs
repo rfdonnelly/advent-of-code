@@ -43,7 +43,7 @@ impl Rect {
     }
 
     fn from_str(s: &str) -> Rect {
-        let re = Regex::new(r"^#\d+ @ (\d+),(\d+): (\d+)x(\d+)$").unwrap();
+        let re = Regex::new(r"(\d+),(\d+): (\d+)x(\d+)$").unwrap();
         let captures = re.captures(s).unwrap();
 
         let x = captures.get(1).unwrap().as_str().parse::<usize>().unwrap();
@@ -70,6 +70,29 @@ impl Rect {
         } else {
             None
         }
+    }
+}
+
+impl fmt::Display for Rect {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for _ in 0..self.top {
+            for _ in 0..=self.right {
+                write!(f, ".")?;
+            }
+            writeln!(f)?;
+        }
+
+        for _ in self.top..=self.bottom {
+            for _ in 0..self.left {
+                write!(f, ".")?;
+            }
+            for _ in self.left..=self.right {
+                write!(f, "x")?;
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -169,5 +192,36 @@ mod tests {
             Some(Rect::new(1, 4, 3, 6))
         );
         assert_eq!(part1(&lines), 16);
+    }
+
+    fn part1_assert(
+        a: Rect,
+        b: Rect,
+        expected: Option<Rect>
+    ) {
+        println!("a\n{}", a);
+        println!("b\n{}", b);
+        match &expected {
+            Some(expected) => println!("expected\n{}", expected),
+            None => println!("expected:{:?}", expected),
+        }
+        assert_eq!(a.intersection(&b), expected);
+    }
+
+
+    #[test]
+    fn part1_intersection_partial_1() {
+        part1_assert(
+            Rect::new(1, 2, 1, 2),
+            Rect::new(2, 3, 2, 3),
+            Some(Rect::new(2, 2, 2, 2)));
+    }
+
+    #[test]
+    fn part1_intersection_contained() {
+        part1_assert(
+            Rect::new(1, 3, 1, 3),
+            Rect::new(2, 2, 2, 2),
+            Some(Rect::new(2, 2, 2, 2)));
     }
 }
