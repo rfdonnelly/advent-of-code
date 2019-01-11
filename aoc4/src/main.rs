@@ -15,8 +15,6 @@ fn main() -> io::Result<()> {
         lines
     };
 
-    lines.iter().for_each(|line| println!("{}", line));
-
     println!("part1: {}", part1(&lines));
     println!("part2: {}", part2(&lines));
 
