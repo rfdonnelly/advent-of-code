@@ -171,6 +171,12 @@ fn most_minutes_asleep(guards: &[Guard]) -> &Guard {
         .unwrap()
 }
 
+fn most_frequently_asleep(guards: &[Guard]) -> &Guard {
+    guards.iter()
+        .max_by_key(|guard| guard.max_minute().duration)
+        .unwrap()
+}
+
 fn part1(lines: &[&str]) -> u32 {
     let guards = parse_lines(lines);
     let guard = most_minutes_asleep(&guards);
@@ -179,7 +185,10 @@ fn part1(lines: &[&str]) -> u32 {
 }
 
 fn part2(lines: &[&str]) -> u32 {
-    0
+    let guards = parse_lines(lines);
+    let guard = most_frequently_asleep(&guards);
+
+    guard.id.0 * guard.max_minute().minute
 }
 
 #[cfg(test)]
@@ -238,5 +247,18 @@ mod part1_tests {
         assert_eq!(guard.max_minute().minute, 24);
 
         assert_eq!(part1(&lines), 240);
+    }
+
+    #[test]
+    fn part2_example() {
+        let lines = example_input();
+
+        let guards = parse_lines(&lines);
+        let guard = most_frequently_asleep(&guards);
+
+        assert_eq!(guard.id, GuardID(99));
+        assert_eq!(guard.max_minute(), MaxMinute { minute: 45, duration: 3 });
+
+        assert_eq!(part2(&lines), 4455);
     }
 }
