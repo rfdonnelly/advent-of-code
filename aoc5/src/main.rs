@@ -46,11 +46,17 @@ impl Polymer {
 
                     if index == 0 {
                         if next_index + 1 == self.units.len() {
+                            // Edge case
+                            // Reduced first and last units.  Nothing left.
                             return None
                         } else {
+                            // Edge case
+                            // Reduced first unit.  Start after "next" unit.
                             return Some(next_index + 1);
                         }
                     } else {
+                        // Typical case
+                        // Reduced middle unit.  Backtrack.
                         return Some(index - 1);
                     }
                 }
