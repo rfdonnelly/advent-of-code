@@ -10,8 +10,10 @@ fn main() -> io::Result<()> {
         .lines()
         .collect();
 
-    println!("part1: {}", part1(&lines));
-    println!("part2: {}", part2(&lines));
+    let line = lines.first().unwrap();
+
+    println!("part1: {}", part1(line));
+    println!("part2: {}", part2(line));
 
     Ok(())
 }
@@ -34,7 +36,9 @@ impl Polymer {
         let mut index = start_index;
         let mut unit = self.units[index];
 
-        assert!(!self.skips[start_index]);
+        while self.skips[index] {
+            index += 1;
+        }
 
         for next_index in start_index+1..self.units.len() {
             if !self.skips[next_index] {
@@ -57,7 +61,7 @@ impl Polymer {
                     } else {
                         // Typical case
                         // Reduced middle unit.  Backtrack.
-                        return Some(index - 1);
+                        return Some(0);
                     }
                 }
 
@@ -69,7 +73,7 @@ impl Polymer {
         None
     }
 
-    fn minimize(&mut self) {
+    fn minimize(&mut self) -> &Self {
         let mut done = false;
         let mut index = 0;
 
@@ -80,6 +84,8 @@ impl Polymer {
                 None => done = true,
             }
         }
+
+        self
     }
 }
 
@@ -103,11 +109,11 @@ fn toggle_case(c: char) -> char {
     }
 }
 
-fn part1(lines: &[&str]) -> String {
-    "".into()
+fn part1(line: &str) -> usize {
+    Polymer::new(line).minimize().to_string().len()
 }
 
-fn part2(lines: &[&str]) -> String {
+fn part2(line: &str) -> String {
     "".into()
 }
 
@@ -134,24 +140,10 @@ mod tests {
         assert_eq!(p.reduce(0), None);
         assert_eq!(p.to_string(), "aabAAB");
 
-        let mut p = Polymer::new("aA");
-        p.minimize();
-        assert_eq!(p.to_string(), "");
-
-        let mut p = Polymer::new("abBA");
-        p.minimize();
-        assert_eq!(p.to_string(), "");
-
-        let mut p = Polymer::new("abAB");
-        p.minimize();
-        assert_eq!(p.to_string(), "abAB");
-
-        let mut p = Polymer::new("aabAAB");
-        p.minimize();
-        assert_eq!(p.to_string(), "aabAAB");
-
-        let mut p = Polymer::new("dabAcCaCBAcCcaDA");
-        p.minimize();
-        assert_eq!(p.to_string(), "dabCBAcaDA");
+        assert_eq!(part1("aA"), 0);
+        assert_eq!(part1("abBA"), 0);
+        assert_eq!(part1("abAB"), 4);
+        assert_eq!(part1("aabAAB"), 6);
+        assert_eq!(part1("dabAcCaCBAcCcaDA"), 10);
     }
 }
