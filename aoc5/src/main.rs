@@ -113,8 +113,22 @@ fn part1(line: &str) -> usize {
     Polymer::new(line).minimize().to_string().len()
 }
 
-fn part2(line: &str) -> String {
-    "".into()
+fn part2(line: &str) -> usize {
+    (b'a'..=b'z')
+        .map(char::from)
+        .map(|a| {
+            let filtered: String = line
+                .chars()
+                .filter(|b| a != b.to_ascii_lowercase())
+                .collect();
+
+            Polymer::new(&filtered)
+                .minimize()
+                .to_string()
+                .len()
+        })
+        .min()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -145,5 +159,10 @@ mod tests {
         assert_eq!(part1("abAB"), 4);
         assert_eq!(part1("aabAAB"), 6);
         assert_eq!(part1("dabAcCaCBAcCcaDA"), 10);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(part2("dabAcCaCBAcCcaDA"), 4);
     }
 }
