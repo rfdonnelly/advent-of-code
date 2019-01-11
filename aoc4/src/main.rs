@@ -47,6 +47,12 @@ enum Line {
     FallsAsleep(Minute),
 }
 
+#[derive(Debug, PartialEq)]
+struct MaxMinute {
+    minute: u32,
+    duration: u32,
+}
+
 impl Guard {
     fn new(id: GuardID) -> Guard {
         Guard {
@@ -62,7 +68,7 @@ impl Guard {
             .sum()
     }
 
-    fn minute_most_asleep(&self) -> u32 {
+    fn max_minute(&self) -> MaxMinute {
         let mut minutes = [0u32; 60];
 
         for range in self.sleep_times.iter() {
@@ -71,11 +77,15 @@ impl Guard {
             }
         }
 
-        minutes.iter()
+        let pair = minutes.iter()
             .enumerate()
             .max_by_key(|e| e.1)
-            .unwrap()
-            .0 as u32
+            .unwrap();
+
+        MaxMinute {
+            minute: pair.0 as u32,
+            duration: *pair.1,
+        }
     }
 }
 
@@ -155,7 +165,7 @@ fn parse_lines(lines: &[&str]) -> Vec<Guard> {
 }
 
 
-fn sleepiest_guard(guards: &[Guard]) -> &Guard {
+fn most_minutes_asleep(guards: &[Guard]) -> &Guard {
     guards.iter()
         .max_by_key(|guard| guard.total_time_asleep())
         .unwrap()
@@ -163,9 +173,9 @@ fn sleepiest_guard(guards: &[Guard]) -> &Guard {
 
 fn part1(lines: &[&str]) -> u32 {
     let guards = parse_lines(lines);
-    let guard = sleepiest_guard(&guards);
+    let guard = most_minutes_asleep(&guards);
 
-    guard.id.0 * guard.minute_most_asleep()
+    guard.id.0 * guard.max_minute().minute
 }
 
 fn part2(lines: &[&str]) -> u32 {
@@ -191,9 +201,8 @@ mod part1_tests {
             Line::FallsAsleep(Minute(26)));
     }
 
-    #[test]
-    fn part1_example() {
-        let lines = vec![
+    fn example_input() -> Vec<&'static str> {
+        vec![
             "[1518-11-01 00:00] Guard #10 begins shift",
             "[1518-11-01 00:05] falls asleep",
             "[1518-11-01 00:25] wakes up",
@@ -211,17 +220,22 @@ mod part1_tests {
             "[1518-11-05 00:03] Guard #99 begins shift",
             "[1518-11-05 00:45] falls asleep",
             "[1518-11-05 00:55] wakes up",
-        ];
+        ]
+    }
+
+    #[test]
+    fn part1_example() {
+        let lines = example_input();
 
         let guards = parse_lines(&lines);
-        let guard = sleepiest_guard(&guards);
+        let guard = most_minutes_asleep(&guards);
 
         println!("guards:{:?}", guards);
         println!("guard:{:?}", guard);
 
         assert_eq!(guard.id, GuardID(10));
         assert_eq!(guard.total_time_asleep(), 50);
-        assert_eq!(guard.minute_most_asleep(), 24);
+        assert_eq!(guard.max_minute().minute, 24);
 
         assert_eq!(part1(&lines), 240);
     }
