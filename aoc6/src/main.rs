@@ -15,7 +15,7 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Point {
     x: i32,
     y: i32,
@@ -115,13 +115,25 @@ impl Grid {
         cells
     }
 
-    fn areas(&self) -> HashMap<usize, u32> {
-        let mut areas: HashMap<usize, u32> = HashMap::new();
+    fn corners(&self) -> Vec<Point> {
+        vec![
+            *self.pois.iter().min_by_key(|poi| (poi.x, poi.y)).unwrap(),
+            *self.pois.iter().min_by_key(|poi| (poi.x, -poi.y)).unwrap(),
+            *self.pois.iter().min_by_key(|poi| (-poi.x, poi.y)).unwrap(),
+            *self.pois.iter().min_by_key(|poi| (-poi.x, -poi.y)).unwrap(),
+        ]
+    }
+
+    /// Returns area by POI
+    fn areas(&self) -> HashMap<Point, u32> {
+        let mut areas: HashMap<Point, u32> = HashMap::new();
 
         for row in self.nearest_neighbors.iter() {
             for cell in row {
                 if let Some(poi_index) = cell {
-                    areas.entry(*poi_index)
+                    let poi = self.pois[*poi_index];
+
+                    areas.entry(poi)
                         .and_modify(|e| *e += 1)
                         .or_insert(1);
                 }
@@ -131,11 +143,15 @@ impl Grid {
         areas
     }
 
-    // TODO: Need to filter infinite areas (i.e. the four POIs closests to the
-    // corners)
     fn max_area(&self) -> u32 {
+        let corners = self.corners();
+
         self.areas()
-            .iter().max_by_key(|kv| kv.1)
+            .iter()
+            .filter(|(&poi, _)| {
+                !corners.contains(&poi)
+            })
+            .max_by_key(|&(_, area)| area)
             .unwrap()
             .1
             .clone()
@@ -187,12 +203,13 @@ mod tests {
 
         let grid = Grid::new(pois.clone());
         let areas = grid.areas();
+        let corners = grid.corners();
         let max_area_poi = areas.iter().max_by_key(|kv| kv.1).unwrap();
 
         println!("grid:{:?}", grid);
         println!("areas:{:?}", areas);
-        println!("max_area_poi_index:{:?}", max_area_poi);
-        println!("max_area_poi_location:{:?}", pois[*max_area_poi.0]);
+        println!("corners:{:?}", corners);
+        println!("max_area_poi:{:?}", max_area_poi);
 
         assert_eq!(grid.max_area(), 17);
 
