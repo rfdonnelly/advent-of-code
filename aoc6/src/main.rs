@@ -57,14 +57,13 @@ struct Grid {
     y_len: usize,
     nearest_neighbors: NearestNeighbors,
     pois: Vec<Point>,
-    border: Rect,
 }
 
 impl Grid {
     fn new(pois: Vec<Point>) -> Grid {
-        let border = Grid::border(&pois);
-        let x_len = border.right as usize + 1;
-        let y_len = border.bottom as usize + 1;
+        let max_xy = Grid::max_xy(&pois);
+        let x_len = max_xy.x as usize + 1;
+        let y_len = max_xy.y as usize + 1;
         let nearest_neighbors = Grid::nearest_neighbors(&pois, x_len, y_len);
 
         Grid {
@@ -72,16 +71,13 @@ impl Grid {
             y_len,
             nearest_neighbors,
             pois,
-            border,
         }
     }
 
-    fn border(pois: &[Point]) -> Rect {
-        Rect {
-            left: pois.iter().map(|point| point.x).min().unwrap(),
-            right: pois.iter().map(|point| point.x).max().unwrap(),
-            top: pois.iter().map(|point| point.y).min().unwrap(),
-            bottom: pois.iter().map(|point| point.y).max().unwrap(),
+    fn max_xy(pois: &[Point]) -> Point {
+        Point {
+            x: pois.iter().map(|point| point.x).max().unwrap(),
+            y: pois.iter().map(|point| point.y).max().unwrap(),
         }
     }
 
@@ -235,9 +231,10 @@ fn part1(lines: &[&str]) -> u32 {
     let pois = parse_lines(lines);
     let grid = Grid::new(pois);
 
-    println!("border:{:?}", grid.border);
     println!("max_poi:{}", grid.poi_index_with_max_area().0);
     println!("{}", grid);
+    println!("infinite_areas:{:?}", grid.infinite_areas());
+    println!("poi_index_with_max_area:{:?}", grid.poi_index_with_max_area());
 
     grid.max_area()
 }
@@ -261,17 +258,27 @@ mod tests {
             "8, 9",
         ];
 
+        assert_eq!(Point::new(0, 0).distance(Point::new(1, 1)), 2);
+        assert_eq!(Point::new(1, 1).distance(Point::new(0, 0)), 2);
+        assert_eq!(Point::new(5, 1).distance(Point::new(1, 1)), 4);
+        assert_eq!(Point::new(1, 1).distance(Point::new(5, 1)), 4);
+        assert_eq!(Point::new(5, 1).distance(Point::new(5, 5)), 4);
+
+        assert_eq!(Point::new(1, 1).distance(Point::new(1, 9)), 8);
+        assert_eq!(Point::new(1, 6).distance(Point::new(1, 9)), 3);
+
         let pois = parse_lines(&lines);
+
+        assert_eq!(Grid::nearest_neighbor(&pois, Point::new(1, 9)), Some(1));
 
         let grid = Grid::new(pois.clone());
         let areas = grid.areas();
-        let corners = grid.corners();
         let max_area_poi = areas.iter().max_by_key(|kv| kv.1).unwrap();
 
         println!("grid:{:?}", grid);
         println!("{}", grid);
+        println!("{:?}", grid.infinite_areas());
         println!("areas:{:?}", areas);
-        println!("corners:{:?}", corners);
         println!("max_area_poi:{:?}", max_area_poi);
 
         assert_eq!(grid.max_area(), 17);
