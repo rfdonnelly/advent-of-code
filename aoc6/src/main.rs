@@ -12,7 +12,7 @@ fn main() -> io::Result<()> {
         .collect();
 
     println!("part1: {}", part1(&lines));
-    println!("part2: {}", part2(&lines));
+    println!("part2: {}", part2(&lines, 10000));
 
     Ok(())
 }
@@ -74,6 +74,20 @@ impl Grid {
         }
     }
 
+    fn from_safe(pois: Vec<Point>, with_in_distance: i32) -> Grid {
+        let max_xy = Grid::max_xy(&pois);
+        let x_len = max_xy.x as usize + 1;
+        let y_len = max_xy.y as usize + 1;
+        let map = Grid::safe_pois(&pois, x_len, y_len, with_in_distance);
+
+        Grid {
+            x_len,
+            y_len,
+            map,
+            pois,
+        }
+    }
+
     fn max_xy(pois: &[Point]) -> Point {
         Point {
             x: pois.iter().map(|point| point.x).max().unwrap(),
@@ -118,6 +132,31 @@ impl Grid {
 
         if single_min {
             Some(*closest_poi_index)
+        } else {
+            None
+        }
+    }
+
+    fn safe_pois(pois: &[Point], x_len: usize, y_len: usize, with_in_distance: i32) -> Map {
+        let mut cells = vec![None; x_len * y_len];
+
+        for x in 0..x_len {
+            for y in 0..y_len {
+                let p = Point::new(x as i32, y as i32);
+                cells[y * x_len + x] = Grid::distance_sum_less_than(pois, p, with_in_distance);
+            }
+        }
+
+        cells
+    }
+
+    fn distance_sum_less_than(pois: &[Point], p: Point, with_in_distance: i32) -> Option<usize> {
+        let distance_sum: i32 = pois.iter()
+            .map(|&poi| poi.distance(p))
+            .sum();
+
+        if distance_sum < with_in_distance {
+            Some(0)
         } else {
             None
         }
@@ -229,8 +268,15 @@ fn part1(lines: &[&str]) -> u32 {
     grid.max_area()
 }
 
-fn part2(lines: &[&str]) -> i32 {
-    0
+fn part2(lines: &[&str], with_in_distance: i32) -> u32 {
+    let pois = parse_lines(lines);
+    let grid = Grid::from_safe(pois, with_in_distance);
+    let areas = grid.areas();
+
+    println!("{}", grid);
+    println!("{:?}", areas);
+
+    areas[&0]
 }
 
 #[cfg(test)]
@@ -278,5 +324,15 @@ mod tests {
         assert_eq!(grid.max_area(), 17);
 
         assert_eq!(super::part1(&lines), 17);
+    }
+
+    #[test]
+    fn part2() {
+        let lines = lines();
+        let pois = parse_lines(&lines);
+        let grid = Grid::from_safe(pois.clone(), 32);
+        println!("{}", grid);
+
+        assert_eq!(super::part2(&lines, 32), 16);
     }
 }
