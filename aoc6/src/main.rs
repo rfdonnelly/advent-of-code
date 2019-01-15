@@ -86,48 +86,41 @@ impl Grid {
 
         for x in 0..x_len {
             for y in 0..y_len {
-                let cell_position = Point::new(x as i32, y as i32);
-
-                let distances: Vec<(usize, i32)> = pois
-                    .iter()
-                    .enumerate()
-                    .map(|(i, poi)| {
-                        let distance = cell_position.distance(*poi);
-                        (i, distance)
-                    })
-                    .collect();
-
-                let (closest_poi_index, min_distance) = distances
-                    .iter()
-                    .min_by_key(|(_, distance)| distance)
-                    .unwrap();
-
-                let instances = distances
-                    .iter()
-                    .filter(|(_, distance)| distance == min_distance)
-                    .count();
-
-                let single_min = instances == 1;
-
-                cells[x * x_len + y] =
-                    if single_min {
-                        Some(*closest_poi_index)
-                    } else {
-                        None
-                    };
+                let p = Point::new(x as i32, y as i32);
+                cells[y * x_len + x] = Grid::nearest_neighbor(pois, p);
             }
         }
 
         cells
     }
 
-    fn corners(&self) -> Vec<usize> {
-        vec![
-            self.pois.iter().enumerate().min_by_key(|(_, poi)| (poi.x, poi.y)).unwrap().0,
-            self.pois.iter().enumerate().min_by_key(|(_, poi)| (poi.x, -poi.y)).unwrap().0,
-            self.pois.iter().enumerate().min_by_key(|(_, poi)| (-poi.x, poi.y)).unwrap().0,
-            self.pois.iter().enumerate().min_by_key(|(_, poi)| (-poi.x, -poi.y)).unwrap().0,
-        ]
+    fn nearest_neighbor(pois: &[Point], p: Point) -> Option<usize> {
+        let distances: Vec<(usize, i32)> = pois
+            .iter()
+            .enumerate()
+            .map(|(i, poi)| {
+                    let distance = p.distance(*poi);
+                    (i, distance)
+                    })
+        .collect();
+
+        let (closest_poi_index, min_distance) = distances
+            .iter()
+            .min_by_key(|(_, distance)| distance)
+            .unwrap();
+
+        let instances = distances
+            .iter()
+            .filter(|(_, distance)| distance == min_distance)
+            .count();
+
+        let single_min = instances == 1;
+
+        if single_min {
+            Some(*closest_poi_index)
+        } else {
+            None
+        }
     }
 
     /// Returns area by POI
@@ -154,19 +147,19 @@ impl Grid {
         let y_max = self.y_len - 1;
 
         for x in 0..=x_max {
-            if let Some(poi_index) = self.nearest_neighbors[x * self.x_len + y_min] {
+            if let Some(poi_index) = self.nearest_neighbors[y_min * self.x_len + x] {
                 infinite_areas.insert(poi_index);
             }
-            if let Some(poi_index) = self.nearest_neighbors[x * self.x_len + y_max] {
+            if let Some(poi_index) = self.nearest_neighbors[y_max * self.x_len + x] {
                 infinite_areas.insert(poi_index);
             }
         }
 
         for y in 0..=y_max {
-            if let Some(poi_index) = self.nearest_neighbors[x_min * self.x_len + y] {
+            if let Some(poi_index) = self.nearest_neighbors[y * self.x_len + x_min] {
                 infinite_areas.insert(poi_index);
             }
-            if let Some(poi_index) = self.nearest_neighbors[x_max * self.x_len + y] {
+            if let Some(poi_index) = self.nearest_neighbors[y * self.x_len + x_max] {
                 infinite_areas.insert(poi_index);
             }
         }
@@ -177,7 +170,7 @@ impl Grid {
     }
 
     fn poi_index_with_max_area(&self) -> (usize, u32) {
-        let infinite_areas = self.corners();
+        let infinite_areas = self.infinite_areas();
 
         let (&a, &b) = self.areas()
             .iter()
@@ -201,16 +194,18 @@ impl fmt::Display for Grid {
         for y in 0..self.y_len {
             for x in 0..self.x_len {
                 let p = Point::new(x as i32, y as i32);
-                match self.nearest_neighbors[x * self.x_len + y] {
+                match self.nearest_neighbors[y * self.x_len + x] {
                     Some(index) => {
                         let c = std::char::from_u32(index as u32 + 97).unwrap();
                         if self.pois.contains(&p) {
-                            write!(f, "{}", c.to_ascii_uppercase())?;
+                            // write!(f, "{}", c.to_ascii_uppercase())?;
+                            write!(f, " *")?;
                         } else {
-                            write!(f, "{:1}", c)?;
+                            // write!(f, "{:1}", c)?;
+                            write!(f, "{:2}", index)?;
                         }
                     }
-                    None => write!(f, ".")?,
+                    None => write!(f, " .")?,
                 }
             }
             writeln!(f)?;
