@@ -56,22 +56,6 @@ struct Grid {
     border: Rect,
 }
 
-struct MinResult {
-    multimatch: bool,
-    min: i32,
-    min_index: usize,
-}
-
-impl MinResult {
-    fn new() -> MinResult {
-        MinResult {
-            multimatch: false,
-            min: std::i32::MAX,
-            min_index: std::usize::MAX,
-        }
-    }
-}
-
 impl Grid {
     fn new(pois: Vec<Point>) -> Grid {
         let border = Grid::border(&pois);
@@ -94,32 +78,41 @@ impl Grid {
     }
 
     fn nearest_neighbors(pois: &[Point], border: &Rect) -> Vec<Vec<Option<usize>>> {
-        let mut cells = vec![vec![None; border.bottom as usize]; border.right as usize];
+        let rows = border.right + 1;
+        let cols = border.bottom + 1;
+        let mut cells = vec![vec![None; cols as usize]; rows as usize];
 
         for x in 0..cells.len() {
             for y in 0..cells[x].len() {
                 let cell_position = Point::new(x as i32, y as i32);
 
-                let min = pois
+                let distances: Vec<(usize, i32)> = pois
                     .iter()
                     .enumerate()
-                    .fold(MinResult::new(), |mut result, (index, poi)| {
+                    .map(|(i, poi)| {
                         let distance = cell_position.distance(*poi);
+                        (i, distance)
+                    })
+                    .collect();
 
-                        if distance < result.min {
-                            result.min = distance;
-                            result.min_index = index;
-                            result.multimatch = false;
-                        } else if distance == result.min {
-                            result.multimatch = true;
-                        }
+                let (closest_poi_index, min_distance) = distances
+                    .iter()
+                    .min_by_key(|(_, distance)| distance)
+                    .unwrap();
 
-                        result
-                    });
+                let instances = distances
+                    .iter()
+                    .filter(|(_, distance)| distance == min_distance)
+                    .count();
 
-                if !min.multimatch {
-                    cells[x][y] = Some(min.min_index);
-                }
+                let single_min = instances == 1;
+
+                cells[x][y] =
+                    if single_min {
+                        Some(*closest_poi_index)
+                    } else {
+                        None
+                    };
             }
         }
 
