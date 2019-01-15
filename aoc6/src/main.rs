@@ -49,9 +49,13 @@ struct Rect {
     bottom: i32,
 }
 
+type NearestNeighbors = Vec<Option<usize>>;
+
 #[derive(Debug, PartialEq)]
 struct Grid {
-    nearest_neighbors: Vec<Vec<Option<usize>>>,
+    x_len: usize,
+    y_len: usize,
+    nearest_neighbors: NearestNeighbors,
     pois: Vec<Point>,
     border: Rect,
 }
@@ -59,9 +63,13 @@ struct Grid {
 impl Grid {
     fn new(pois: Vec<Point>) -> Grid {
         let border = Grid::border(&pois);
-        let nearest_neighbors = Grid::nearest_neighbors(&pois, &border);
+        let x_len = border.right as usize + 1;
+        let y_len = border.bottom as usize + 1;
+        let nearest_neighbors = Grid::nearest_neighbors(&pois, x_len, y_len);
 
         Grid {
+            x_len,
+            y_len,
             nearest_neighbors,
             pois,
             border,
@@ -77,13 +85,11 @@ impl Grid {
         }
     }
 
-    fn nearest_neighbors(pois: &[Point], border: &Rect) -> Vec<Vec<Option<usize>>> {
-        let rows = border.right + 1;
-        let cols = border.bottom + 1;
-        let mut cells = vec![vec![None; cols as usize]; rows as usize];
+    fn nearest_neighbors(pois: &[Point], x_len: usize, y_len: usize) -> NearestNeighbors {
+        let mut cells = vec![None; x_len * y_len];
 
-        for x in 0..cells.len() {
-            for y in 0..cells[x].len() {
+        for x in 0..x_len {
+            for y in 0..y_len {
                 let cell_position = Point::new(x as i32, y as i32);
 
                 let distances: Vec<(usize, i32)> = pois
@@ -107,7 +113,7 @@ impl Grid {
 
                 let single_min = instances == 1;
 
-                cells[x][y] =
+                cells[x * x_len + y] =
                     if single_min {
                         Some(*closest_poi_index)
                     } else {
@@ -132,13 +138,11 @@ impl Grid {
     fn areas(&self) -> HashMap<usize, u32> {
         let mut areas: HashMap<usize, u32> = HashMap::new();
 
-        for row in self.nearest_neighbors.iter() {
-            for cell in row {
-                if let Some(poi_index) = cell {
-                    areas.entry(*poi_index)
-                        .and_modify(|e| *e += 1)
-                        .or_insert(1);
-                }
+        for cell in self.nearest_neighbors.iter() {
+            if let Some(poi_index) = cell {
+                areas.entry(*poi_index)
+                    .and_modify(|e| *e += 1)
+                    .or_insert(1);
             }
         }
 
@@ -149,24 +153,24 @@ impl Grid {
         let mut infinite_areas: HashSet<usize> = HashSet::new();
 
         let x_min = 0;
-        let x_max = self.nearest_neighbors.len() - 1;
+        let x_max = self.x_len - 1;
         let y_min = 0;
-        let y_max = self.nearest_neighbors[0].len() - 1;
+        let y_max = self.y_len - 1;
 
         for x in 0..=x_max {
-            if let Some(poi_index) = self.nearest_neighbors[x][y_min] {
+            if let Some(poi_index) = self.nearest_neighbors[x * self.x_len + y_min] {
                 infinite_areas.insert(poi_index);
             }
-            if let Some(poi_index) = self.nearest_neighbors[x][y_max] {
+            if let Some(poi_index) = self.nearest_neighbors[x * self.x_len + y_max] {
                 infinite_areas.insert(poi_index);
             }
         }
 
         for y in 0..=y_max {
-            if let Some(poi_index) = self.nearest_neighbors[x_min][y] {
+            if let Some(poi_index) = self.nearest_neighbors[x_min * self.x_len + y] {
                 infinite_areas.insert(poi_index);
             }
-            if let Some(poi_index) = self.nearest_neighbors[x_max][y] {
+            if let Some(poi_index) = self.nearest_neighbors[x_max * self.x_len + y] {
                 infinite_areas.insert(poi_index);
             }
         }
@@ -198,10 +202,18 @@ impl Grid {
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for row in self.nearest_neighbors.iter() {
-            for cell in row {
-                match cell {
-                    Some(index) => write!(f, "{:1}", index)?,
+        for y in 0..self.y_len {
+            for x in 0..self.x_len {
+                let p = Point::new(x as i32, y as i32);
+                match self.nearest_neighbors[x * self.x_len + y] {
+                    Some(index) => {
+                        let c = std::char::from_u32(index as u32 + 97).unwrap();
+                        if self.pois.contains(&p) {
+                            write!(f, "{}", c.to_ascii_uppercase())?;
+                        } else {
+                            write!(f, "{:1}", c)?;
+                        }
+                    }
                     None => write!(f, ".")?,
                 }
             }
