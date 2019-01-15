@@ -49,27 +49,27 @@ struct Rect {
     bottom: i32,
 }
 
-type NearestNeighbors = Vec<Option<usize>>;
+type Map = Vec<Option<usize>>;
 
 #[derive(Debug, PartialEq)]
 struct Grid {
     x_len: usize,
     y_len: usize,
-    nearest_neighbors: NearestNeighbors,
+    map: Map,
     pois: Vec<Point>,
 }
 
 impl Grid {
-    fn new(pois: Vec<Point>) -> Grid {
+    fn from_unsafe(pois: Vec<Point>) -> Grid {
         let max_xy = Grid::max_xy(&pois);
         let x_len = max_xy.x as usize + 1;
         let y_len = max_xy.y as usize + 1;
-        let nearest_neighbors = Grid::nearest_neighbors(&pois, x_len, y_len);
+        let map = Grid::unsafe_pois(&pois, x_len, y_len);
 
         Grid {
             x_len,
             y_len,
-            nearest_neighbors,
+            map,
             pois,
         }
     }
@@ -81,7 +81,7 @@ impl Grid {
         }
     }
 
-    fn nearest_neighbors(pois: &[Point], x_len: usize, y_len: usize) -> NearestNeighbors {
+    fn unsafe_pois(pois: &[Point], x_len: usize, y_len: usize) -> Map {
         let mut cells = vec![None; x_len * y_len];
 
         for x in 0..x_len {
@@ -127,7 +127,7 @@ impl Grid {
     fn areas(&self) -> HashMap<usize, u32> {
         let mut areas: HashMap<usize, u32> = HashMap::new();
 
-        for cell in self.nearest_neighbors.iter() {
+        for cell in self.map.iter() {
             if let Some(poi_index) = cell {
                 areas.entry(*poi_index)
                     .and_modify(|e| *e += 1)
@@ -147,19 +147,19 @@ impl Grid {
         let y_max = self.y_len - 1;
 
         for x in 0..=x_max {
-            if let Some(poi_index) = self.nearest_neighbors[y_min * self.x_len + x] {
+            if let Some(poi_index) = self.map[y_min * self.x_len + x] {
                 infinite_areas.insert(poi_index);
             }
-            if let Some(poi_index) = self.nearest_neighbors[y_max * self.x_len + x] {
+            if let Some(poi_index) = self.map[y_max * self.x_len + x] {
                 infinite_areas.insert(poi_index);
             }
         }
 
         for y in 0..=y_max {
-            if let Some(poi_index) = self.nearest_neighbors[y * self.x_len + x_min] {
+            if let Some(poi_index) = self.map[y * self.x_len + x_min] {
                 infinite_areas.insert(poi_index);
             }
-            if let Some(poi_index) = self.nearest_neighbors[y * self.x_len + x_max] {
+            if let Some(poi_index) = self.map[y * self.x_len + x_max] {
                 infinite_areas.insert(poi_index);
             }
         }
@@ -194,18 +194,13 @@ impl fmt::Display for Grid {
         for y in 0..self.y_len {
             for x in 0..self.x_len {
                 let p = Point::new(x as i32, y as i32);
-                match self.nearest_neighbors[y * self.x_len + x] {
-                    Some(index) => {
-                        let c = std::char::from_u32(index as u32 + 97).unwrap();
-                        if self.pois.contains(&p) {
-                            // write!(f, "{}", c.to_ascii_uppercase())?;
-                            write!(f, " *")?;
-                        } else {
-                            // write!(f, "{:1}", c)?;
-                            write!(f, "{:2}", index)?;
-                        }
+                if self.pois.contains(&p) {
+                    write!(f, " *")?;
+                } else {
+                    match self.map[y * self.x_len + x] {
+                        Some(index) => write!(f, "{:2}", index)?,
+                            None => write!(f, " .")?,
                     }
-                    None => write!(f, " .")?,
                 }
             }
             writeln!(f)?;
@@ -224,7 +219,7 @@ fn parse_lines(lines: &[&str]) -> Vec<Point> {
 
 fn part1(lines: &[&str]) -> u32 {
     let pois = parse_lines(lines);
-    let grid = Grid::new(pois);
+    let grid = Grid::from_unsafe(pois);
 
     println!("max_poi:{}", grid.poi_index_with_max_area().0);
     println!("{}", grid);
@@ -242,16 +237,20 @@ fn part2(lines: &[&str]) -> i32 {
 mod tests {
     use super::*;
 
-    #[test]
-    fn part1() {
-        let lines = vec![
+    fn lines() -> Vec<&'static str> {
+        vec![
             "1, 1",
             "1, 6",
             "8, 3",
             "3, 4",
             "5, 5",
             "8, 9",
-        ];
+        ]
+    }
+
+    #[test]
+    fn part1() {
+        let lines = lines();
 
         assert_eq!(Point::new(0, 0).distance(Point::new(1, 1)), 2);
         assert_eq!(Point::new(1, 1).distance(Point::new(0, 0)), 2);
@@ -266,7 +265,7 @@ mod tests {
 
         assert_eq!(Grid::nearest_neighbor(&pois, Point::new(1, 9)), Some(1));
 
-        let grid = Grid::new(pois.clone());
+        let grid = Grid::from_unsafe(pois.clone());
         let areas = grid.areas();
         let max_area_poi = areas.iter().max_by_key(|kv| kv.1).unwrap();
 
