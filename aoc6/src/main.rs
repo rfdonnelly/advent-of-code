@@ -1,5 +1,7 @@
 use std::io::{self, Read};
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::fmt;
 
 fn main() -> io::Result<()> {
     let mut input = String::new();
@@ -72,13 +74,22 @@ impl MinResult {
 
 impl Grid {
     fn new(pois: Vec<Point>) -> Grid {
-        let border = border(&pois);
+        let border = Grid::border(&pois);
         let nearest_neighbors = Grid::nearest_neighbors(&pois, &border);
 
         Grid {
             nearest_neighbors,
             pois,
             border,
+        }
+    }
+
+    fn border(pois: &[Point]) -> Rect {
+        Rect {
+            left: pois.iter().map(|point| point.x).min().unwrap(),
+            right: pois.iter().map(|point| point.x).max().unwrap(),
+            top: pois.iter().map(|point| point.y).min().unwrap(),
+            bottom: pois.iter().map(|point| point.y).max().unwrap(),
         }
     }
 
@@ -115,25 +126,23 @@ impl Grid {
         cells
     }
 
-    fn corners(&self) -> Vec<Point> {
+    fn corners(&self) -> Vec<usize> {
         vec![
-            *self.pois.iter().min_by_key(|poi| (poi.x, poi.y)).unwrap(),
-            *self.pois.iter().min_by_key(|poi| (poi.x, -poi.y)).unwrap(),
-            *self.pois.iter().min_by_key(|poi| (-poi.x, poi.y)).unwrap(),
-            *self.pois.iter().min_by_key(|poi| (-poi.x, -poi.y)).unwrap(),
+            self.pois.iter().enumerate().min_by_key(|(_, poi)| (poi.x, poi.y)).unwrap().0,
+            self.pois.iter().enumerate().min_by_key(|(_, poi)| (poi.x, -poi.y)).unwrap().0,
+            self.pois.iter().enumerate().min_by_key(|(_, poi)| (-poi.x, poi.y)).unwrap().0,
+            self.pois.iter().enumerate().min_by_key(|(_, poi)| (-poi.x, -poi.y)).unwrap().0,
         ]
     }
 
     /// Returns area by POI
-    fn areas(&self) -> HashMap<Point, u32> {
-        let mut areas: HashMap<Point, u32> = HashMap::new();
+    fn areas(&self) -> HashMap<usize, u32> {
+        let mut areas: HashMap<usize, u32> = HashMap::new();
 
         for row in self.nearest_neighbors.iter() {
             for cell in row {
                 if let Some(poi_index) = cell {
-                    let poi = self.pois[*poi_index];
-
-                    areas.entry(poi)
+                    areas.entry(*poi_index)
                         .and_modify(|e| *e += 1)
                         .or_insert(1);
                 }
@@ -143,18 +152,70 @@ impl Grid {
         areas
     }
 
-    fn max_area(&self) -> u32 {
-        let corners = self.corners();
+    fn infinite_areas(&self) -> Vec<usize> {
+        let mut infinite_areas: HashSet<usize> = HashSet::new();
 
-        self.areas()
+        let x_min = 0;
+        let x_max = self.nearest_neighbors.len() - 1;
+        let y_min = 0;
+        let y_max = self.nearest_neighbors[0].len() - 1;
+
+        for x in 0..=x_max {
+            if let Some(poi_index) = self.nearest_neighbors[x][y_min] {
+                infinite_areas.insert(poi_index);
+            }
+            if let Some(poi_index) = self.nearest_neighbors[x][y_max] {
+                infinite_areas.insert(poi_index);
+            }
+        }
+
+        for y in 0..=y_max {
+            if let Some(poi_index) = self.nearest_neighbors[x_min][y] {
+                infinite_areas.insert(poi_index);
+            }
+            if let Some(poi_index) = self.nearest_neighbors[x_max][y] {
+                infinite_areas.insert(poi_index);
+            }
+        }
+
+        infinite_areas
+            .into_iter()
+            .collect()
+    }
+
+    fn poi_index_with_max_area(&self) -> (usize, u32) {
+        let infinite_areas = self.corners();
+
+        let (&a, &b) = self.areas()
             .iter()
-            .filter(|(&poi, _)| {
-                !corners.contains(&poi)
+            .filter(|(&poi_index, _)| {
+                !infinite_areas.contains(&poi_index)
             })
             .max_by_key(|&(_, area)| area)
             .unwrap()
-            .1
-            .clone()
+            .clone();
+
+        (a, b)
+    }
+
+    fn max_area(&self) -> u32 {
+        self.poi_index_with_max_area().1
+    }
+}
+
+impl fmt::Display for Grid {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for row in self.nearest_neighbors.iter() {
+            for cell in row {
+                match cell {
+                    Some(index) => write!(f, "{:1}", index)?,
+                    None => write!(f, ".")?,
+                }
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -167,21 +228,17 @@ fn parse_lines(lines: &[&str]) -> Vec<Point> {
 
 fn part1(lines: &[&str]) -> u32 {
     let pois = parse_lines(lines);
+    let grid = Grid::new(pois);
 
-    Grid::new(pois).max_area()
+    println!("border:{:?}", grid.border);
+    println!("max_poi:{}", grid.poi_index_with_max_area().0);
+    println!("{}", grid);
+
+    grid.max_area()
 }
 
 fn part2(lines: &[&str]) -> i32 {
     0
-}
-
-fn border(pois: &[Point]) -> Rect {
-    Rect {
-        left: pois.iter().map(|point| point.x).min().unwrap(),
-        right: pois.iter().map(|point| point.x).max().unwrap(),
-        top: pois.iter().map(|point| point.y).min().unwrap(),
-        bottom: pois.iter().map(|point| point.y).max().unwrap(),
-    }
 }
 
 #[cfg(test)]
@@ -207,6 +264,7 @@ mod tests {
         let max_area_poi = areas.iter().max_by_key(|kv| kv.1).unwrap();
 
         println!("grid:{:?}", grid);
+        println!("{}", grid);
         println!("areas:{:?}", areas);
         println!("corners:{:?}", corners);
         println!("max_area_poi:{:?}", max_area_poi);
