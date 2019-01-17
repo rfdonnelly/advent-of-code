@@ -90,6 +90,14 @@ impl Graph {
             nodes,
         }
     }
+
+    fn roots(&self) -> Vec<char> {
+        self.nodes
+            .iter()
+            .filter(|(_, node)| node.parents.is_empty())
+            .map(|(id, _)| *id)
+            .collect()
+    }
 }
 
 fn parse_lines(lines: &[&str]) -> Vec<Edge> {
@@ -162,6 +170,13 @@ mod tests {
         });
 
         assert_eq!(Graph::new(&edges()), expected);
+    }
+
+    #[test]
+    fn part1_roots() {
+        let graph = Graph::new(&edges());
+
+        assert_eq!(graph.roots(), vec!['C']);
     }
 
     #[test]
