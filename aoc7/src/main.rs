@@ -81,6 +81,11 @@ impl Graph {
                 .or_insert(Node::with_parent(edge.from));
         }
 
+        for (_id, node) in nodes.iter_mut() {
+            node.parents.sort();
+            node.children.sort();
+        }
+
         Graph {
             nodes,
         }
