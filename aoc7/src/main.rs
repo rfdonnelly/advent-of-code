@@ -33,21 +33,21 @@ impl Edge {
 }
 
 #[derive(Debug, PartialEq)]
-struct Edges {
+struct Node {
     parents: Vec<char>,
     children: Vec<char>,
 }
 
-impl Edges {
-    fn with_child(child: char) -> Edges {
-        Edges {
+impl Node {
+    fn with_child(child: char) -> Node {
+        Node {
             parents: Vec::new(),
             children: vec![child],
         }
     }
 
-    fn with_parent(parent: char) -> Edges {
-        Edges {
+    fn with_parent(parent: char) -> Node {
+        Node {
             parents: vec![parent],
             children: Vec::new(),
         }
@@ -64,25 +64,25 @@ impl Edges {
 
 #[derive(Debug, PartialEq)]
 struct Graph {
-    edge_map: HashMap<char, Edges>,
+    nodes: HashMap<char, Node>,
 }
 
 impl Graph {
     fn new(edges: &[Edge]) -> Graph {
-        let mut edge_map: HashMap<char, Edges> = HashMap::new();
+        let mut nodes: HashMap<char, Node> = HashMap::new();
 
         for edge in edges {
-            edge_map.entry(edge.from)
+            nodes.entry(edge.from)
                 .and_modify(|e| e.add_child(edge.to))
-                .or_insert(Edges::with_child(edge.to));
+                .or_insert(Node::with_child(edge.to));
 
-            edge_map.entry(edge.to)
+            nodes.entry(edge.to)
                 .and_modify(|e| e.add_parent(edge.from))
-                .or_insert(Edges::with_parent(edge.from));
+                .or_insert(Node::with_parent(edge.from));
         }
 
         Graph {
-            edge_map,
+            nodes,
         }
     }
 }
@@ -130,28 +130,28 @@ mod tests {
 
     #[test]
     fn part1_graph() {
-        let mut expected = Graph { edge_map: HashMap::new() };
-        expected.edge_map.insert('C', Edges {
+        let mut expected = Graph { nodes: HashMap::new() };
+        expected.nodes.insert('C', Node {
             parents: Vec::new(),
             children: vec!['A', 'F'],
         });
-        expected.edge_map.insert('A', Edges {
+        expected.nodes.insert('A', Node {
             parents: vec!['C'],
             children: vec!['B', 'D'],
         });
-        expected.edge_map.insert('B', Edges {
+        expected.nodes.insert('B', Node {
             parents: vec!['A'],
             children: vec!['E'],
         });
-        expected.edge_map.insert('D', Edges {
+        expected.nodes.insert('D', Node {
             parents: vec!['A'],
             children: vec!['E'],
         });
-        expected.edge_map.insert('F', Edges {
+        expected.nodes.insert('F', Node {
             parents: vec!['C'],
             children: vec!['E'],
         });
-        expected.edge_map.insert('E', Edges {
+        expected.nodes.insert('E', Node {
             parents: vec!['B', 'D', 'F'],
             children: Vec::new(),
         });
