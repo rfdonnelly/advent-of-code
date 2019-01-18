@@ -1,5 +1,6 @@
 use std::io::{self, Read};
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 fn main() -> io::Result<()> {
     let mut input = String::new();
@@ -98,6 +99,40 @@ impl Graph {
             .map(|(id, _)| *id)
             .collect()
     }
+
+    fn sequence(&self) -> String {
+        let mut available = self.roots();
+        let mut made_available: HashSet<char> = HashSet::new();
+        let mut complete: HashSet<char> = HashSet::new();
+
+        let mut sequence: Vec<char> = Vec::new();
+
+        while !available.is_empty() {
+            available.sort_unstable_by(|a, b| b.cmp(a) );
+            let node = available.pop().unwrap();
+
+            sequence.push(node);
+            complete.insert(node);
+
+            let children = &self.nodes[&node].children;
+            for &child in children {
+                if !made_available.contains(&child) && self.prereqs_complete(child, &complete) {
+                    available.push(child);
+                    made_available.insert(child);
+                }
+            }
+        }
+
+        sequence
+            .iter()
+            .collect()
+    }
+
+    fn prereqs_complete(&self, node: char, complete: &HashSet<char>) -> bool {
+        self.nodes[&node].parents
+            .iter()
+            .all(|parent| complete.contains(parent))
+    }
 }
 
 fn parse_lines(lines: &[&str]) -> Vec<Edge> {
@@ -108,7 +143,9 @@ fn parse_lines(lines: &[&str]) -> Vec<Edge> {
 }
 
 fn part1(lines: &[&str]) -> String {
-    "".into()
+    let edges = parse_lines(lines);
+    let graph = Graph::new(&edges);
+    graph.sequence()
 }
 
 fn part2(lines: &[&str]) -> u32 {
