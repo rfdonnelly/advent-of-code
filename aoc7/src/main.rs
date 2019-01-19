@@ -11,7 +11,7 @@ fn main() -> io::Result<()> {
         .collect();
 
     println!("part1: {}", part1(&lines));
-    println!("part2: {}", part2(&lines));
+    println!("part2: {}", part2(&lines, 5, 60));
 
     Ok(())
 }
@@ -133,6 +133,114 @@ impl Graph {
             .iter()
             .all(|parent| complete.contains(parent))
     }
+
+    fn step_sequence(&self, num_workers: usize, base_time: u32) -> String {
+        let mut available = self.roots();
+        let mut made_available: HashSet<char> = HashSet::new();
+        let mut complete: HashSet<char> = HashSet::new();
+        let mut workers = WorkerPool::new(num_workers, base_time);
+
+        let mut sequence: Vec<char> = Vec::new();
+
+        while !available.is_empty() || !workers.is_empty() {
+            available.sort_unstable_by(|a, b| b.cmp(a) );
+            available = workers.schedule(available);
+
+            let finished = workers.next().unwrap();
+            for node in finished {
+                sequence.push(node);
+                complete.insert(node);
+
+                // Process completed nodes
+                let children = &self.nodes[&node].children;
+                for &child in children {
+                    if !made_available.contains(&child) && self.prereqs_complete(child, &complete) {
+                        available.push(child);
+                        made_available.insert(child);
+                    }
+                }
+            }
+
+        }
+
+        sequence
+            .iter()
+            .collect()
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+struct Worker {
+    node: char,
+    time_remaining: u32,
+}
+
+impl Worker {
+    fn new(node: char, time_remaining: u32) -> Self {
+        Self {
+            node,
+            time_remaining,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+struct WorkerPool {
+    workers: Vec<Worker>,
+    base_time: u32,
+}
+
+impl WorkerPool {
+    fn new(capacity: usize, base_time: u32) -> Self {
+        Self {
+            workers: Vec::with_capacity(capacity),
+            base_time,
+        }
+    }
+
+    fn available(&self) -> bool {
+        self.workers.len() < self.workers.capacity()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.workers.is_empty()
+    }
+
+    fn schedule(&mut self, mut available: Vec<char>) -> Vec<char> {
+        while self.available() && !available.is_empty() {
+            let node = available.pop().unwrap();
+            let time_remaining = (node as u32 - 'A' as u32 + 1) + self.base_time;
+            self.workers.push(Worker::new(node, time_remaining));
+        }
+
+        available
+    }
+
+    fn next(&mut self) -> Option<Vec<char>> {
+        let work_amount = self.workers
+            .iter()
+            .map(|worker| worker.time_remaining)
+            .min()
+            .unwrap();
+
+        for worker in self.workers.iter_mut() {
+            worker.time_remaining -= work_amount;
+        }
+
+        let mut finished: Vec<char> = Vec::new();
+        for i in (0..self.workers.len()).rev() {
+            if self.workers[i].time_remaining == 0 {
+                finished.push(self.workers[i].node);
+                self.workers.remove(i);
+            }
+        }
+
+        if finished.is_empty() {
+            None
+        } else {
+            Some(finished)
+        }
+    }
 }
 
 fn parse_lines(lines: &[&str]) -> Vec<Edge> {
@@ -148,8 +256,10 @@ fn part1(lines: &[&str]) -> String {
     graph.sequence()
 }
 
-fn part2(lines: &[&str]) -> u32 {
-    0
+fn part2(lines: &[&str], num_workers: usize, base_time: u32) -> String {
+    let edges = parse_lines(lines);
+    let graph = Graph::new(&edges);
+    graph.step_sequence(num_workers, base_time)
 }
 
 #[cfg(test)]
@@ -219,5 +329,10 @@ mod tests {
     #[test]
     fn part1() {
         assert_eq!(super::part1(&lines()), "CABDFE");
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(super::part2(&lines(), 2, 0), "CABFDE");
     }
 }
