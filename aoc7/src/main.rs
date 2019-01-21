@@ -12,7 +12,8 @@ fn main() -> io::Result<()> {
         .collect();
 
     println!("part1: {}", part1(&lines));
-    println!("part2: {}", part2(&lines, 5, 60));
+    println!("part1: {:?}", part2(&lines, 1, 0, 0));
+    println!("part2: {:?}", part2(&lines, 5, 60, 1));
 
     Ok(())
 }
@@ -148,7 +149,7 @@ impl Graph {
             .all(|parent| complete.contains(parent))
     }
 
-    fn step_sequence(&self, num_workers: usize, base_time: u32) -> String {
+    fn step_sequence(&self, num_workers: usize, base_time: u32, time_multiplier: u32) -> (String, u32) {
         let mut available = self.roots();
         let mut made_available: HashSet<char> = HashSet::new();
         let mut complete: HashSet<char> = HashSet::new();
@@ -158,7 +159,7 @@ impl Graph {
 
         while !available.is_empty() || !workers.is_empty() {
             available.sort_unstable_by(|a, b| b.cmp(a) );
-            available = workers.schedule(available);
+            available = workers.schedule(available, time_multiplier);
 
             let finished = workers.next().unwrap();
             for node in finished {
@@ -177,9 +178,10 @@ impl Graph {
 
         }
 
-        sequence
+        (sequence
             .iter()
-            .collect()
+            .collect(),
+            workers.total_time)
     }
 }
 
@@ -202,6 +204,7 @@ impl Worker {
 struct WorkerPool {
     workers: Vec<Worker>,
     base_time: u32,
+    total_time: u32,
 }
 
 impl WorkerPool {
@@ -209,6 +212,7 @@ impl WorkerPool {
         Self {
             workers: Vec::with_capacity(capacity),
             base_time,
+            total_time: 0,
         }
     }
 
@@ -220,10 +224,10 @@ impl WorkerPool {
         self.workers.is_empty()
     }
 
-    fn schedule(&mut self, mut available: Vec<char>) -> Vec<char> {
+    fn schedule(&mut self, mut available: Vec<char>, time_multiplier: u32) -> Vec<char> {
         while self.available() && !available.is_empty() {
             let node = available.pop().unwrap();
-            let time_remaining = (node as u32 - 'A' as u32 + 1) + self.base_time;
+            let time_remaining = time_multiplier * (node as u32 - 'A' as u32 + 1) + self.base_time;
             self.workers.push(Worker::new(node, time_remaining));
         }
 
@@ -236,6 +240,8 @@ impl WorkerPool {
             .map(|worker| worker.time_remaining)
             .min()
             .unwrap();
+
+        self.total_time += work_amount;
 
         for worker in self.workers.iter_mut() {
             worker.time_remaining -= work_amount;
@@ -270,10 +276,10 @@ fn part1(lines: &[&str]) -> String {
     graph.sequence()
 }
 
-fn part2(lines: &[&str], num_workers: usize, base_time: u32) -> String {
+fn part2(lines: &[&str], num_workers: usize, base_time: u32, time_multiplier: u32) -> (String, u32) {
     let edges = parse_lines(lines);
     let graph = Graph::new(&edges);
-    graph.step_sequence(num_workers, base_time)
+    graph.step_sequence(num_workers, base_time, time_multiplier)
 }
 
 #[cfg(test)]
@@ -345,10 +351,11 @@ mod tests {
     #[test]
     fn part1() {
         assert_eq!(super::part1(&lines()), "CABDFE");
+        assert_eq!(super::part2(&lines(), 1, 0, 0), ("CABDFE".into(), 0));
     }
 
     #[test]
     fn part2() {
-        assert_eq!(super::part2(&lines(), 2, 0), "CABFDE");
+        assert_eq!(super::part2(&lines(), 2, 0, 1), ("CABFDE".into(), 15));
     }
 }
