@@ -1,6 +1,7 @@
 use std::io::{self, Read};
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fmt;
 
 fn main() -> io::Result<()> {
     let mut input = String::new();
@@ -66,6 +67,19 @@ impl Node {
 #[derive(Debug, PartialEq)]
 struct Graph {
     nodes: HashMap<char, Node>,
+}
+
+impl fmt::Display for Graph {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "digraph {{")?;
+        for (id, node) in self.nodes.iter() {
+            for child in node.children.iter() {
+                writeln!(f, "    {} -> {}", id, child)?;
+            }
+        }
+
+        writeln!(f, "}}")
+    }
 }
 
 impl Graph {
@@ -322,6 +336,8 @@ mod tests {
     #[test]
     fn part1_roots() {
         let graph = Graph::new(&edges());
+
+        println!("{}", graph);
 
         assert_eq!(graph.roots(), vec!['C']);
     }
