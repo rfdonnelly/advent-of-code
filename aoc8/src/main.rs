@@ -22,8 +22,16 @@ fn parse_line(s: &str) -> Vec<u32> {
         .collect()
 }
 
-fn part1(line: &str) -> usize {
-    0
+fn part1(line: &str) -> u32 {
+    let stream = parse_line(line);
+    let mut nodes: Vec<Node> = Vec::new();
+    parse_node(&mut stream.iter(), &mut nodes);
+
+    nodes
+        .into_iter()
+        .map(|node| node.metadata)
+        .flatten()
+        .sum::<u32>()
 }
 
 fn part2(line: &str) -> usize {
@@ -44,11 +52,24 @@ impl Node {
     }
 }
 
-fn parse_stream(stream: &[u32]) -> Vec<Node> {
-    let mut stack: Vec<usize> = Vec::new();
-    let mut nodes: Vec<Node> = Vec::new();
+fn parse_node(stream: &mut dyn Iterator<Item=&u32>, nodes: &mut Vec<Node>) -> usize {
+    let num_children = *stream.next().unwrap();
+    let num_metadata = *stream.next().unwrap();
+    let node = Node::new(num_children, num_metadata);
 
-    nodes
+    let node_index = nodes.len();
+    nodes.push(node);
+
+    for _ in 0..num_children {
+        let child = parse_node(stream, nodes);
+        nodes[node_index].children.push(child);
+    }
+
+    for _ in 0..num_metadata {
+        nodes[node_index].metadata.push(*stream.next().unwrap());
+    }
+
+    node_index
 }
 
 #[cfg(test)]
@@ -61,5 +82,6 @@ mod tests {
 
     #[test]
     fn part1() {
+        assert_eq!(super::part1(&line()), 138);
     }
 }
