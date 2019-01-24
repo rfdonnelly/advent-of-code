@@ -33,8 +33,11 @@ fn part1(line: &str) -> u32 {
         .sum::<u32>()
 }
 
-fn part2(line: &str) -> usize {
-    0
+fn part2(line: &str) -> u32 {
+    let stream = parse_line(line);
+    let nodes = parse_nodes(&mut stream.iter());
+
+    node_value(0, &nodes)
 }
 
 struct Node {
@@ -77,6 +80,24 @@ fn parse_nodes(stream: &mut dyn Iterator<Item=&u32>) -> Vec<Node> {
     nodes
 }
 
+fn node_value(node_index: usize, nodes: &[Node]) -> u32 {
+    if nodes[node_index].children.is_empty() {
+        nodes[node_index].metadata
+            .iter()
+            .sum()
+    } else {
+        nodes[node_index].metadata
+            .iter()
+            .map(|metadata| (metadata - 1) as usize)
+            .filter(|&index| index < nodes[node_index].children.len())
+            .map(|index| {
+                let node_index = nodes[node_index].children[index];
+                node_value(node_index, nodes)
+            })
+            .sum()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     fn line() -> &'static str {
@@ -86,5 +107,10 @@ mod tests {
     #[test]
     fn part1() {
         assert_eq!(super::part1(&line()), 138);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(super::part2(&line()), 66);
     }
 }
