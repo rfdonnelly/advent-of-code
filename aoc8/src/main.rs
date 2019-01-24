@@ -24,8 +24,7 @@ fn parse_line(s: &str) -> Vec<u32> {
 
 fn part1(line: &str) -> u32 {
     let stream = parse_line(line);
-    let mut nodes: Vec<Node> = Vec::new();
-    parse_node(&mut stream.iter(), &mut nodes);
+    let nodes = parse_nodes(&mut stream.iter());
 
     nodes
         .into_iter()
@@ -72,10 +71,14 @@ fn parse_node(stream: &mut dyn Iterator<Item=&u32>, nodes: &mut Vec<Node>) -> us
     node_index
 }
 
+fn parse_nodes(stream: &mut dyn Iterator<Item=&u32>) -> Vec<Node> {
+    let mut nodes: Vec<Node> = Vec::new();
+    parse_node(stream, &mut nodes);
+    nodes
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     fn line() -> &'static str {
         "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2"
     }
