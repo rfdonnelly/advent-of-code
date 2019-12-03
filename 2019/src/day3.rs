@@ -26,13 +26,22 @@ fn part1(wires: &Vec<Wire>) -> i32 {
 
     intersections(&wires[0], &wires[1])
         .iter()
-        .map(|p| p.manhattan_distance())
+        .map(|(_a, _b, p)| p.manhattan_distance())
         .min()
         .unwrap()
 }
 
-fn part2(wires: &Vec<Wire>) -> u32 {
-    0
+fn part2(wires: &Vec<Wire>) -> i32 {
+    let wires: Vec<Vec<Segment>> = wires
+        .iter()
+        .map(wire_to_segments)
+        .collect();
+
+    intersections(&wires[0], &wires[1])
+        .iter()
+        .map(|(a, b, p)| a.steps_to(*p) + b.steps_to(*p))
+        .min()
+        .unwrap()
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -82,45 +91,56 @@ impl Point {
 struct Segment {
     p0: Point,
     p1: Point,
+    // The number of steps leading up to but not including this segment
+    steps: i32,
 }
 
 impl Segment {
-    fn from_points(p0: Point, p1: Point) -> Self {
-        Segment {p0, p1}
+    fn from_points(p0: Point, p1: Point, steps: i32) -> Self {
+        Segment {p0, p1, steps}
+    }
+
+    fn steps_to(&self, p: Point) -> i32 {
+        self.steps + (self.p0.x - p.x).abs() + (self.p0.y - p.y).abs()
     }
 }
 
 fn wire_to_segments(wire: &Wire) -> Vec<Segment> {
     let mut p1 = Point::new(0, 0);
     let mut segments = Vec::new();
+    let mut steps = 0;
+    let mut next_steps = 0;
 
     for vector in wire {
         let p2 =
             match vector {
                 GridVector::X(magnitude) => {
+                    next_steps += magnitude.abs();
                     Point::new(p1.x + magnitude, p1.y)
                 }
                 GridVector::Y(magnitude) => {
+                    next_steps += magnitude.abs();
                     Point::new(p1.x, p1.y + magnitude)
                 }
             };
 
-        segments.push(Segment::from_points(p1, p2));
+        segments.push(Segment::from_points(p1, p2, steps));
 
         p1 = p2;
+        steps = next_steps;
     }
 
     segments
 }
 
-fn intersections(a_s: &[Segment], b_s: &[Segment]) -> Vec<Point> {
+fn intersections(a_s: &[Segment], b_s: &[Segment]) -> Vec<(Segment, Segment, Point)> {
     let mut intersections = Vec::new();
 
-    for a in a_s {
-        for b in b_s {
-            if let Some(intersection) = intersection(*a, *b) {
+    for &a in a_s {
+        for &b in b_s {
+            if let Some(intersection) = intersection(a, b) {
                 if !intersection.is_origin() {
-                    intersections.push(intersection);
+                    intersections.push((a, b, intersection));
                 }
             }
         }
@@ -177,6 +197,7 @@ mod tests {
             Segment {
                 p0: Point {x: x0, y: y0},
                 p1: Point {x: x1, y: y1},
+                steps: 0,
             }
         }
     }
@@ -254,5 +275,35 @@ mod tests {
 
         let wires = parse_input(input);
         assert_eq!(part1(&wires), 135);
+    }
+
+    #[test]
+    fn test_part2_example1() {
+        let input =
+            "R8,U5,L5,D3\n\
+             U7,R6,D4,L4";
+
+        let wires = parse_input(input);
+        assert_eq!(part2(&wires), 30);
+    }
+
+    #[test]
+    fn test_part2_example2() {
+        let input =
+            "R75,D30,R83,U83,L12,D49,R71,U7,L72\n\
+             U62,R66,U55,R34,D71,R55,D58,R83";
+
+        let wires = parse_input(input);
+        assert_eq!(part2(&wires), 610);
+    }
+
+    #[test]
+    fn test_part2_example3() {
+        let input =
+            "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51\n\
+            U98,R91,D20,R16,D67,R40,U7,R15,U6,R7";
+
+        let wires = parse_input(input);
+        assert_eq!(part2(&wires), 410);
     }
 }
