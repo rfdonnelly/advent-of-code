@@ -79,7 +79,16 @@ impl Point {
 }
 
 #[derive(Copy, Clone, Debug)]
-struct Segment(Point, Point);
+struct Segment {
+    p0: Point,
+    p1: Point,
+}
+
+impl Segment {
+    fn from_points(p0: Point, p1: Point) -> Self {
+        Segment {p0, p1}
+    }
+}
 
 fn wire_to_segments(wire: &Wire) -> Vec<Segment> {
     let mut p1 = Point::new(0, 0);
@@ -96,7 +105,7 @@ fn wire_to_segments(wire: &Wire) -> Vec<Segment> {
                 }
             };
 
-        segments.push(Segment(p1, p2));
+        segments.push(Segment::from_points(p1, p2));
 
         p1 = p2;
     }
@@ -121,18 +130,18 @@ fn intersections(a_s: &[Segment], b_s: &[Segment]) -> Vec<Point> {
 }
 
 fn intersection(a: Segment, b: Segment) -> Option<Point> {
-    if a.0.x == a.1.x && b.0.x == b.1.x {
+    if a.p0.x == a.p1.x && b.p0.x == b.p1.x {
         // Parallel in the x dimension
         // Assumes parallel lines do not overlap
         None
-    } else if a.0.y == a.1.y && b.0.y == b.1.y {
+    } else if a.p0.y == a.p1.y && b.p0.y == b.p1.y {
         // Parallel in the y dimension
         // Assumes parallel lines do not overlap
         None
     } else {
         // Normalize so that a always runs in the x dimension and b always runs in the y dimension
         let (a, b) =
-            if a.0.x != a.1.x {
+            if a.p0.x != a.p1.x {
                 // Segment a runs in the x dimension, b runs in the y dimension
                 (a, b)
             } else {
@@ -140,10 +149,10 @@ fn intersection(a: Segment, b: Segment) -> Option<Point> {
                 (b, a)
             };
 
-        let c = Point::new(b.0.x, a.0.y);
+        let c = Point::new(b.p0.x, a.p0.y);
 
-        if ((c.y >= b.0.y && c.y <= b.1.y) || (c.y >= b.1.y && c.y <= b.0.y)) &&
-           ((c.x >= a.0.x && c.x <= a.1.x) || (c.x >= a.1.x && c.x <= a.0.x))
+        if ((c.y >= b.p0.y && c.y <= b.p1.y) || (c.y >= b.p1.y && c.y <= b.p0.y)) &&
+           ((c.x >= a.p0.x && c.x <= a.p1.x) || (c.x >= a.p1.x && c.x <= a.p0.x))
         {
             Some(c)
         } else {
@@ -165,10 +174,10 @@ mod tests {
 
     impl Segment {
         fn new(x0: i32, y0: i32, x1: i32, y1: i32) -> Segment {
-            Segment(
-                Point {x: x0, y: y0},
-                Point {x: x1, y: y1},
-            )
+            Segment {
+                p0: Point {x: x0, y: y0},
+                p1: Point {x: x1, y: y1},
+            }
         }
     }
 
