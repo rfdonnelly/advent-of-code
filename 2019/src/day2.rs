@@ -88,18 +88,18 @@ fn execute_opcode(index: usize, program: &mut [u32]) -> Result<Next, String> {
 mod tests {
     use super::*;
 
-    fn part1_from_str(input: &str) -> u32 {
+    fn execute_program_from_str(input: &str) -> u32 {
         let mut program: Vec<u32> = parse_line(input);
-        part1(&mut program)
+        execute_program(&mut program).unwrap()
     }
 
     #[test]
-    fn test_part1() {
-        assert_eq!(part1_from_str("1,9,10,3,2,3,11,0,99,30,40,50"), 3500);
-        assert_eq!(part1_from_str("1,0,0,0,99"), 2);
-        assert_eq!(part1_from_str("2,3,0,3,99"), 2);
-        assert_eq!(part1_from_str("2,4,4,5,99,0"), 2);
-        assert_eq!(part1_from_str("1,1,1,4,99,5,6,0,99"), 30);
+    fn test_execute_program() {
+        assert_eq!(execute_program_from_str("1,9,10,3,2,3,11,0,99,30,40,50"), 3500);
+        assert_eq!(execute_program_from_str("1,0,0,0,99"), 2);
+        assert_eq!(execute_program_from_str("2,3,0,3,99"), 2);
+        assert_eq!(execute_program_from_str("2,4,4,5,99,0"), 2);
+        assert_eq!(execute_program_from_str("1,1,1,4,99,5,6,0,99"), 30);
     }
 }
 
