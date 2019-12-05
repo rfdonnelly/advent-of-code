@@ -92,6 +92,31 @@ impl Mode {
     }
 }
 
+fn decode_modes(instruction_code: i32, param_count: u32) -> Result<Vec<Mode>, String> {
+    let mut modes = Vec::new();
+
+    for i in 0..param_count {
+        let mod_div = 10_i32.pow(i + 3);
+        let div_div = 10_i32.pow(i + 2);
+        modes.push(Mode::from((instruction_code % mod_div) / div_div)?);
+    }
+
+    Ok(modes)
+}
+
+fn address_params(params: &[i32], modes: &[Mode], program: &[i32]) -> Vec<i32> {
+    params
+        .iter()
+        .zip(modes.iter())
+        .map(|(&param, mode)| {
+            match mode {
+                Mode::Position => program[param as usize],
+                Mode::Immediate => param,
+            }
+        })
+        .collect()
+}
+
 fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next, String> {
     let instruction_code = program[index];
 
@@ -99,11 +124,7 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
 
     match opcode {
         1 | 2 => {
-            let modes = [
-                Mode::from((instruction_code % 1000) / 100)?,
-                Mode::from((instruction_code % 10000) / 1000)?,
-                Mode::from((instruction_code % 100000) / 10000)?,
-            ];
+            let modes = decode_modes(instruction_code, 3)?;
 
             if let Mode::Immediate = modes[2] {
                 return Err(format!(
@@ -117,16 +138,7 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
                 program[index + 3],
             ];
 
-            let values: Vec<i32> = params
-                .iter()
-                .zip(modes.iter())
-                .map(|(&param, mode)| {
-                    match mode {
-                        Mode::Position => program[param as usize],
-                        Mode::Immediate => param,
-                    }
-                })
-                .collect();
+            let values = address_params(&params, &modes, program);
 
             program[params[2] as usize] =
                 match opcode {
