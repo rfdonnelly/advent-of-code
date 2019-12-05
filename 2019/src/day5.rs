@@ -11,7 +11,7 @@ pub(crate) fn main() -> io::Result<()> {
         .unwrap();
 
     println!("day2::part1: {}", part1(&mut program.clone()));
-    // println!("day2::part2: {}", part2(&mut program.clone()));
+    println!("day2::part2: {}", part2(&mut program.clone()));
 
     Ok(())
 }
@@ -28,7 +28,13 @@ fn part1(program: &mut [i32]) -> i32 {
         .unwrap()
         .last()
         .unwrap()
+}
 
+fn part2(program: &mut [i32]) -> i32 {
+    *execute_program(program, 5)
+        .unwrap()
+        .last()
+        .unwrap()
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -123,7 +129,7 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
     let opcode = instruction_code % 100;
 
     match opcode {
-        1 | 2 => {
+        1 | 2 | 7 | 8 => {
             let modes = decode_modes(instruction_code, 3)?;
 
             if let Mode::Immediate = modes[2] {
@@ -144,6 +150,8 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
                 match opcode {
                     1 => values[0] + values[1],
                     2 => values[0] * values[1],
+                    7 => (values[0] < values[1]) as i32,
+                    8 => (values[0] == values[1]) as i32,
                     _ => unreachable!(),
                 };
 
@@ -162,7 +170,27 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
                 }
                 _ => unreachable!(),
             }
+        }
+        5 | 6 => {
+            let params = [
+                program[index + 1],
+                program[index + 2],
+            ];
+            let modes = decode_modes(instruction_code, 2)?;
+            let values = address_params(&params, &modes, program);
 
+            let jump =
+                match opcode {
+                    5 => values[0] != 0,
+                    6 => values[0] == 0,
+                    _ => unreachable!(),
+                };
+
+            if jump {
+                Ok(Next::Continue(Continue::new(values[1] as usize)))
+            } else {
+                Ok(Next::Continue(Continue::new(index + 3)))
+            }
         }
         99 => Ok(Next::Halt),
         _ => Err(format!("Unknown opcode {} at index {}", opcode, index))
