@@ -69,14 +69,14 @@ fn execute_opcode(index: usize, program: &mut [u32]) -> Result<Next, String> {
     let opcode = program[index];
 
     match opcode {
-        1 => {
+        1 | 2 => {
             let (a, b, c) = (program[index + 1] as usize, program[index + 2] as usize, program[index + 3] as usize);
-            program[c] = program[a] + program[b];
-            Ok(Next::Continue(index + 4))
-        }
-        2 => {
-            let (a, b, c) = (program[index + 1] as usize, program[index + 2] as usize, program[index + 3] as usize);
-            program[c] = program[a] * program[b];
+            program[c] =
+                match opcode {
+                    1 => program[a] + program[b],
+                    2 => program[a] * program[b],
+                    _ => unreachable!(),
+                };
             Ok(Next::Continue(index + 4))
         }
         99 => Ok(Next::Halt(program[0])),
