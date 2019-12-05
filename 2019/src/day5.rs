@@ -24,11 +24,11 @@ fn parse_line(line: &str) -> Vec<i32> {
 }
 
 fn part1(program: &mut [i32]) -> i32 {
-    let outputs = execute_program(program, 1).unwrap();
+    *execute_program(program, 1)
+        .unwrap()
+        .last()
+        .unwrap()
 
-    dbg!(&outputs);
-
-    outputs[outputs.len() - 1]
 }
 
 #[derive(Debug, Copy, Clone)]
