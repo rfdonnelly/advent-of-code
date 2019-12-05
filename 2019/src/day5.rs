@@ -97,8 +97,6 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
 
     let opcode = instruction_code % 100;
 
-    dbg!(instruction_code);
-
     match opcode {
         1 | 2 => {
             let modes = [
@@ -118,19 +116,6 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
                 program[index + 2],
                 program[index + 3],
             ];
-
-            let mut message = format!("instruction_code:{} opcode:{} ", instruction_code, opcode);
-            for (&param, mode) in params.iter().zip(modes.iter()) {
-                match mode {
-                    Mode::Position => {
-                        message.push_str(&format!("{}@{} ", program[param as usize], param));
-                    }
-                    Mode::Immediate => {
-                        message.push_str(&format!("{} ", param));
-                    }
-                }
-            }
-            println!("{}", message);
 
             let values: Vec<i32> = params
                 .iter()
@@ -158,11 +143,9 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
             match opcode {
                 3 => {
                     program[io_index] = input;
-                    println!("input:{}@{}", program[io_index], io_index);
                     Ok(Next::Continue(Continue::new(index + 2)))
                 }
                 4 => {
-                    println!("output:{}@{}", program[io_index], io_index);
                     Ok(Next::Continue(Continue::with_output(index + 2, program[io_index])))
                 }
                 _ => unreachable!(),
