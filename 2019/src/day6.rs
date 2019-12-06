@@ -34,27 +34,27 @@ fn parse_line(line: &str) -> Tuple {
 type Map = HashMap<String, String>;
 type Tuple<'a> = (&'a str, &'a str);
 
-fn part1(entries: &[Tuple]) -> u32 {
+fn part1(entries: &[Tuple]) -> usize {
     let orbits = to_map(entries);
 
     orbits
         .keys()
-        .map(|name| num_orbits(name, &orbits))
-        .sum::<u32>()
+        .map(|name| parents(name, &orbits).len())
+        .sum()
 }
 
-fn num_orbits(name: &str, map: &Map) -> u32 {
-    let mut name = name;
-    let mut count = 0;
+fn parents<'a>(from: &str, map: &'a Map) -> Vec<&'a str> {
+    let mut child = from;
+    let mut parents = Vec::new();
 
     loop {
-        match map.get(name) {
+        match map.get(child) {
             Some(parent) => {
-                count += 1;
-                name = parent;
+                parents.push(parent.as_str());
+                child = parent;
             }
             None => {
-                return count;
+                return parents;
             }
         }
     }
