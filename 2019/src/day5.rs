@@ -10,8 +10,8 @@ pub(crate) fn main() -> io::Result<()> {
         .next()
         .unwrap();
 
-    println!("day2::part1: {}", part1(&mut program.clone()));
-    println!("day2::part2: {}", part2(&mut program.clone()));
+    println!("day5::part1: {}", part1(&mut program.clone()));
+    println!("day5::part2: {}", part2(&mut program.clone()));
 
     Ok(())
 }
