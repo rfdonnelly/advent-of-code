@@ -26,14 +26,14 @@ fn parse_line(line: &str) -> Vec<i32> {
 }
 
 fn part1(program: &mut [i32]) -> i32 {
-    *execute_program(program, 1)
+    *execute_program(program, &mut vec![1])
         .unwrap()
         .last()
         .unwrap()
 }
 
 fn part2(program: &mut [i32]) -> i32 {
-    *execute_program(program, 5)
+    *execute_program(program, &mut vec![5])
         .unwrap()
         .last()
         .unwrap()
@@ -66,12 +66,12 @@ enum Next {
     Halt,
 }
 
-fn execute_program(program: &mut [i32], input: i32) -> Result<Vec<i32>, String> {
+fn execute_program(program: &mut [i32], inputs: &mut Vec<i32>) -> Result<Vec<i32>, String> {
     let mut index = 0;
     let mut outputs = Vec::new();
 
     loop {
-        let result = execute_opcode(index, program, input);
+        let result = execute_opcode(index, program, inputs);
         match result {
             Ok(Next::Continue(value)) => {
                 index = value.next_index;
@@ -125,7 +125,7 @@ fn address_params(params: &[i32], modes: &[Mode], program: &[i32]) -> Vec<i32> {
         .collect()
 }
 
-fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next, String> {
+fn execute_opcode(index: usize, program: &mut [i32], inputs: &mut Vec<i32>) -> Result<Next, String> {
     let instruction_code = program[index];
 
     let opcode = instruction_code % 100;
@@ -164,7 +164,7 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
 
             match opcode {
                 3 => {
-                    program[io_index] = input;
+                    program[io_index] = inputs.pop().unwrap();
                     Ok(Next::Continue(Continue::new(index + 2)))
                 }
                 4 => {
@@ -203,18 +203,18 @@ fn execute_opcode(index: usize, program: &mut [i32], input: i32) -> Result<Next,
 mod tests {
     use super::*;
 
-    fn execute_program_from_str(program: &str, input: i32) -> Vec<i32> {
+    fn execute_program_from_str(program: &str, inputs: &mut Vec<i32>) -> Vec<i32> {
         let mut program: Vec<i32> = parse_line(program);
-        execute_program(&mut program, input).unwrap()
+        execute_program(&mut program, inputs).unwrap()
     }
 
     #[test]
     fn test_add() {
-        assert_eq!(execute_program_from_str("1101,100,-5,0,4,0,99", 0), vec![95]);
+        assert_eq!(execute_program_from_str("1101,100,-5,0,4,0,99", &mut vec![0]), vec![95]);
     }
 
     #[test]
     fn test_io() {
-        assert_eq!(execute_program_from_str("3,0,4,0,99", -34), vec![-34]);
+        assert_eq!(execute_program_from_str("3,0,4,0,99", &mut vec![-34]), vec![-34]);
     }
 }
