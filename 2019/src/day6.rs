@@ -90,8 +90,18 @@ mod tests {
 
     #[test]
     fn test_part1() {
-        let input = "1)2\n2)3";
+        let input = "COM)B\n\
+            B)C\n\
+            C)D\n\
+            D)E\n\
+            E)F\n\
+            B)G\n\
+            G)H\n\
+            D)I\n\
+            E)J\n\
+            J)K\n\
+            K)L";
         let input: Vec<Tuple> = parse_input(&input, parse_line);
-        assert_eq!(part1(&input), 3);
+        assert_eq!(part1(&input), 42);
     }
 }
