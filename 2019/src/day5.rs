@@ -18,7 +18,7 @@ pub(crate) fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn parse_line(line: &str) -> Vec<i32> {
+pub(crate) fn parse_line(line: &str) -> Vec<i32> {
     line
         .split(",")
         .filter_map(|x| x.parse::<i32>().ok())
@@ -66,7 +66,7 @@ enum Next {
     Halt,
 }
 
-fn execute_program(program: &mut [i32], inputs: &mut Vec<i32>) -> Result<Vec<i32>, String> {
+pub(crate) fn execute_program(program: &mut [i32], inputs: &mut Vec<i32>) -> Result<Vec<i32>, String> {
     let mut index = 0;
     let mut outputs = Vec::new();
 
