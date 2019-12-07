@@ -1,12 +1,14 @@
 use std::fs;
 use std::io;
 
+use crate::lib::parse_input;
+
 pub(crate) fn main() -> io::Result<()> {
     let input = fs::read_to_string("input/5")?;
 
-    let program: Vec<i32> = input
-        .lines()
-        .map(parse_line)
+    let program: Vec<i32> =
+        parse_input(&input, parse_line)
+        .into_iter()
         .next()
         .unwrap();
 

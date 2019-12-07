@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::io;
 
+use crate::lib::parse_input;
+
 pub(crate) fn main() -> io::Result<()> {
     let input = fs::read_to_string("input/6")?;
 
@@ -11,16 +13,6 @@ pub(crate) fn main() -> io::Result<()> {
     println!("day6::part2: {}", part2(&input));
 
     Ok(())
-}
-
-fn parse_input<'a, T, F>(s: &'a str, parse_line: F) -> Vec<T>
-where
-    F: Fn(&'a str) -> T
-{
-    s
-        .lines()
-        .map(parse_line)
-        .collect()
 }
 
 fn parse_line(line: &str) -> Tuple {

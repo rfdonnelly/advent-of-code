@@ -5,6 +5,8 @@ mod day4;
 mod day5;
 mod day6;
 
+mod lib;
+
 use std::io;
 
 fn main() -> io::Result<()> {
