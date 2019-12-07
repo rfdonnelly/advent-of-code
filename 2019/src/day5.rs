@@ -70,6 +70,11 @@ pub(crate) fn execute_program(program: &mut [i32], inputs: &mut Vec<i32>) -> Res
     let mut index = 0;
     let mut outputs = Vec::new();
 
+    // Reverse so we can treat like a FIFO.
+    // Could have used a VecDeque instead of a Vec but VecDeque requires a use
+    // statement and much refactor.
+    inputs.reverse();
+
     loop {
         let result = execute_opcode(index, program, inputs);
         match result {
