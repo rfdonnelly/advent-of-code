@@ -8,7 +8,7 @@ pub(crate) fn main() -> io::Result<()> {
     let input: Vec<Tuple> = parse_input(&input, parse_line);
 
     println!("day6::part1: {}", part1(&input));
-    // println!("day6::part2: {}", part2(input));
+    println!("day6::part2: {}", part2(&input));
 
     Ok(())
 }
@@ -41,6 +41,43 @@ fn part1(entries: &[Tuple]) -> usize {
         .keys()
         .map(|name| parents(name, &orbits).len())
         .sum()
+}
+
+fn part2(entries: &[Tuple]) -> usize {
+    let orbits = to_map(entries);
+
+    let a_parents = parents("YOU", &orbits);
+    let b_parents = parents("SAN", &orbits);
+
+    let common_ancestor =
+        common_ancestor(&a_parents, &b_parents)
+        .unwrap();
+
+    let a_transfers = transfers(common_ancestor, &a_parents);
+    let b_transfers = transfers(common_ancestor, &b_parents);
+
+    a_transfers + b_transfers
+}
+
+fn common_ancestor<'a>(a_parents: &[&'a str], b_parents: &[&'a str]) -> Option<&'a str> {
+    for a in a_parents {
+        for b in b_parents {
+            if a == b {
+                return Some(a);
+            }
+        }
+    }
+
+    None
+}
+
+fn transfers(to: &str, parents: &[&str]) -> usize {
+    parents
+        .iter()
+        .enumerate()
+        .find(|(_, &name)| name == to)
+        .unwrap()
+        .0
 }
 
 fn parents<'a>(from: &str, map: &'a Map) -> Vec<&'a str> {
@@ -103,5 +140,24 @@ mod tests {
             K)L";
         let input: Vec<Tuple> = parse_input(&input, parse_line);
         assert_eq!(part1(&input), 42);
+    }
+
+    #[test]
+    fn test_part2() {
+        let input = "COM)B\n\
+            B)C\n\
+            C)D\n\
+            D)E\n\
+            E)F\n\
+            B)G\n\
+            G)H\n\
+            D)I\n\
+            E)J\n\
+            J)K\n\
+            K)L\n\
+            K)YOU\n\
+            I)SAN";
+        let input: Vec<Tuple> = parse_input(&input, parse_line);
+        assert_eq!(part2(&input), 4);
     }
 }
