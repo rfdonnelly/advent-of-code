@@ -4,7 +4,16 @@ use std::io;
 use crate::lib::parse_input;
 
 pub(crate) fn main() -> io::Result<()> {
-    let input = fs::read_to_string("input/5")?;
+    let (part1, part2) = day5();
+
+    println!("day5::part1: {}", part1);
+    println!("day5::part2: {}", part2);
+
+    Ok(())
+}
+
+fn day5() -> (i32, i32) {
+    let input = fs::read_to_string("input/5").unwrap();
 
     let program: Vec<i32> =
         parse_input(&input, parse_line)
@@ -12,10 +21,7 @@ pub(crate) fn main() -> io::Result<()> {
         .next()
         .unwrap();
 
-    println!("day5::part1: {}", part1(&mut program.clone()));
-    println!("day5::part2: {}", part2(&mut program.clone()));
-
-    Ok(())
+    (part1(&program), part2(&program))
 }
 
 pub(crate) fn parse_line(line: &str) -> Vec<i32> {
@@ -221,5 +227,10 @@ mod tests {
     #[test]
     fn test_io() {
         assert_eq!(execute_program_from_str("3,0,4,0,99", &mut vec![-34]), vec![-34]);
+    }
+
+    #[test]
+    fn test_day5() {
+        assert_eq!(day5(), (7157989, 7873292))
     }
 }

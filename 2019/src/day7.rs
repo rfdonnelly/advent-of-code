@@ -13,7 +13,16 @@ type Program = Vec<i32>;
 type ProgramRef<'a> = &'a[i32];
 
 pub(crate) fn main() -> io::Result<()> {
-    let input = fs::read_to_string("input/7")?;
+    let (part1, part2) = day7();
+
+    println!("day7::part1: {}", part1);
+    println!("day7::part2: {}", part2);
+
+    Ok(())
+}
+
+fn day7() -> (i32, i32) {
+    let input = fs::read_to_string("input/7").unwrap();
 
     let program: Program =
         parse_input(&input, parse_line)
@@ -21,10 +30,7 @@ pub(crate) fn main() -> io::Result<()> {
         .next()
         .unwrap();
 
-    println!("day7::part1: {}", part1(&program));
-    // println!("day7::part2: {}", part2(&mut program.clone()));
-
-    Ok(())
+    (part1(&program), part2(&program))
 }
 
 fn part1(program: ProgramRef) -> i32 {
@@ -34,6 +40,10 @@ fn part1(program: ProgramRef) -> i32 {
         .map(|phases| amplify(program, &phases))
         .max()
         .unwrap()
+}
+
+fn part2(program: ProgramRef) -> i32 {
+    0
 }
 
 fn amplify(
@@ -70,8 +80,13 @@ mod tests {
     #[test]
     fn test_part1_example1() {
         let input = "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0";
-        let program: Program = parse_line(input);
+        let program = parse_line(input);
         assert_eq!(amplify(&program, &[4,3,2,1,0]), 43210);
         assert_eq!(part1_from_str(input), 43210);
+    }
+
+    #[test]
+    fn test_day7() {
+        assert_eq!(day7(), (24625, 0))
     }
 }
