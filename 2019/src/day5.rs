@@ -36,6 +36,7 @@ fn part1(program: Vec<i32>) -> i32 {
     *Computer::new(program, vec![1])
         .run()
         .unwrap()
+        .outputs
         .last()
         .unwrap()
 }
@@ -44,6 +45,7 @@ fn part2(program: Vec<i32>) -> i32 {
     *Computer::new(program, vec![5])
         .run()
         .unwrap()
+        .outputs
         .last()
         .unwrap()
 }
@@ -56,13 +58,24 @@ pub(crate) struct Computer {
     inputs: VecDeque<i32>,
 }
 
-type Output = Vec<i32>;
+pub(crate) struct RunResult {
+    pub outputs: Vec<i32>,
+    pub state: State,
+}
+
+#[derive(Debug)]
+pub(crate) enum State {
+    Halt,
+    WaitForInput,
+}
 
 enum StepResult {
     Continue(usize, Option<i32>),
+    WaitForInput,
     Halt,
 }
 
+#[derive(Debug)]
 enum Op {
     Add,
     Multiply,
@@ -105,7 +118,7 @@ impl Computer {
         self.inputs.push_back(input);
     }
 
-    pub fn run(&mut self) -> Result<Output, ()> {
+    pub fn run(&mut self) -> Result<RunResult, ()> {
         let mut outputs = Vec::new();
 
         loop {
@@ -119,8 +132,11 @@ impl Computer {
                                 outputs.push(output);
                             }
                         }
+                        StepResult::WaitForInput => {
+                            return Ok(RunResult { outputs, state: State::WaitForInput });
+                        }
                         StepResult::Halt => {
-                            return Ok(outputs);
+                            return Ok(RunResult { outputs, state: State::Halt });
                         }
                     }
                 }
@@ -162,8 +178,15 @@ impl Computer {
 
                 match op {
                     Op::Input => {
-                        self.mem[address] = self.inputs.pop_front().unwrap();
-                        Ok(StepResult::Continue(self.ip + 2, None))
+                        match self.inputs.pop_front() {
+                            Some(input) => {
+                                self.mem[address] = input;
+                                Ok(StepResult::Continue(self.ip + 2, None))
+                            }
+                            None => {
+                                Ok(StepResult::WaitForInput)
+                            }
+                        }
                     }
                     Op::Output => {
                         Ok(StepResult::Continue(self.ip + 2, Some(self.mem[address])))
@@ -245,12 +268,12 @@ mod tests {
 
     #[test]
     fn test_add() {
-        assert_eq!(Computer::new(parse_line("1101,100,-5,0,4,0,99"), vec![0]).run().unwrap(), vec![95]);
+        assert_eq!(Computer::new(parse_line("1101,100,-5,0,4,0,99"), vec![0]).run().unwrap().outputs, vec![95]);
     }
 
     #[test]
     fn test_io() {
-        assert_eq!(Computer::new(parse_line("3,0,4,0,99"), vec![-34]).run().unwrap(), vec![-34]);
+        assert_eq!(Computer::new(parse_line("3,0,4,0,99"), vec![-34]).run().unwrap().outputs, vec![-34]);
     }
 
     #[test]

@@ -5,6 +5,7 @@ use itertools::Itertools;
 
 use crate::day5::{
     Computer,
+    State,
     parse_line,
 };
 use crate::lib::parse_input;
@@ -43,7 +44,12 @@ fn part1(program: ProgramRef) -> i32 {
 }
 
 fn part2(program: ProgramRef) -> i32 {
-    0
+    (5..10)
+        .into_iter()
+        .permutations(5)
+        .map(|phases| amplify_with_feedback(program, &phases))
+        .max()
+        .unwrap()
 }
 
 fn amplify(
@@ -60,11 +66,38 @@ fn amplify(
 
     for amplifier in amplifiers.iter_mut() {
         amplifier.push_input(input);
-        output = *amplifier.run().unwrap().first().unwrap();
+        output = *amplifier.run().unwrap().outputs.first().unwrap();
         input = output;
     }
 
     output
+}
+
+fn amplify_with_feedback(
+    program: ProgramRef,
+    phases: &[i32],
+) -> i32 {
+    let mut amplifiers: Vec<Computer> = phases
+        .iter()
+        .map(|&phase| Computer::new(program.to_vec(), vec![phase]))
+        .collect();
+
+    let mut input = 0;
+
+    loop {
+        for (i, amplifier) in amplifiers.iter_mut().enumerate() {
+            amplifier.push_input(input);
+            let result = amplifier.run().unwrap();
+            let output = *result.outputs.first().unwrap();
+
+            if i == 4 {
+                if let State::Halt = result.state {
+                    return output;
+                }
+            }
+            input = output;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -90,7 +123,14 @@ mod tests {
     }
 
     #[test]
+    fn test_part2_example1() {
+        let input = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5";
+        let program = parse_line(input);
+        assert_eq!(amplify_with_feedback(&program, &[9,8,7,6,5]), 139629729);
+    }
+
+    #[test]
     fn test_day7() {
-        assert_eq!(day7(), (24625, 0))
+        assert_eq!(day7(), (24625, 36497698))
     }
 }
