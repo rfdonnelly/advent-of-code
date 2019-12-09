@@ -1,7 +1,6 @@
 use std::fs;
 use std::io;
 
-use itertools::Chunk;
 use itertools::Itertools;
 
 pub(crate) fn main() -> io::Result<()> {
