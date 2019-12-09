@@ -50,12 +50,17 @@ fn amplify(
     program: ProgramRef,
     phases: &[i32],
 ) -> i32 {
+    let mut amplifiers: Vec<Computer> = phases
+        .iter()
+        .map(|&phase| Computer::new(program.to_vec(), vec![phase]))
+        .collect();
+
     let mut input = 0;
     let mut output = 0;
 
-    for &phase in phases {
-        let outputs = Computer::new(program.to_vec(), vec![phase, input]).run().unwrap();
-        output = outputs[0];
+    for amplifier in amplifiers.iter_mut() {
+        amplifier.push_input(input);
+        output = *amplifier.run().unwrap().first().unwrap();
         input = output;
     }
 

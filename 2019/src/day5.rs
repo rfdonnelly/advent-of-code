@@ -101,6 +101,10 @@ impl Computer {
         }
     }
 
+    pub fn push_input(&mut self, input: i32) {
+        self.inputs.push_back(input);
+    }
+
     pub fn run(&mut self) -> Result<Output, ()> {
         let mut outputs = Vec::new();
 
