@@ -4,7 +4,7 @@ use std::io;
 use itertools::Itertools;
 
 use crate::day5::{
-    execute_program,
+    Computer,
     parse_line,
 };
 use crate::lib::parse_input;
@@ -54,8 +54,7 @@ fn amplify(
     let mut output = 0;
 
     for &phase in phases {
-        let mut program = program.to_vec();
-        let outputs = execute_program(&mut program, &mut vec![phase, input]).unwrap();
+        let outputs = Computer::new(program.to_vec(), vec![phase, input]).run().unwrap();
         output = outputs[0];
         input = output;
     }
