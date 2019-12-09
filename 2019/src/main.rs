@@ -7,6 +7,7 @@ mod day6;
 mod day7;
 mod day8;
 
+mod computer;
 mod lib;
 
 use std::io;
