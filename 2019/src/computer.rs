@@ -190,7 +190,13 @@ impl Computer {
                 }
             }
             Op::AdjustRelativeBase => {
-                self.rb = ((self.rb as i64) + self.mem[self.ip + 1]) as usize;
+                let params = [
+                    self.mem[self.ip + 1]
+                ];
+                let modes = Self::decode_modes(instruction, params.len());
+                let values = self.address_params(&params, &modes);
+
+                self.rb = ((self.rb as i64) + values[0]) as usize;
                 Ok(StepResult::Continue(self.ip + 2, None))
             }
             Op::Halt => {
@@ -249,7 +255,7 @@ impl Computer {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Mode {
     Position,
     Immediate,
