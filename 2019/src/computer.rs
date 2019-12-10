@@ -6,12 +6,12 @@ pub(crate) struct Computer {
     /// Relative base
     rb: usize,
     /// Memory
-    mem: Vec<i32>,
-    inputs: VecDeque<i32>,
+    mem: Vec<i64>,
+    inputs: VecDeque<i64>,
 }
 
 pub(crate) struct RunResult {
-    pub outputs: Vec<i32>,
+    pub outputs: Vec<i64>,
     pub state: State,
 }
 
@@ -22,7 +22,7 @@ pub(crate) enum State {
 }
 
 enum StepResult {
-    Continue(usize, Option<i32>),
+    Continue(usize, Option<i64>),
     WaitForInput,
     Halt,
 }
@@ -42,7 +42,7 @@ enum Op {
 }
 
 impl Op {
-    fn from_instruction(instruction: i32) -> Self {
+    fn from_instruction(instruction: i64) -> Self {
         match instruction % 100 {
             1 => Self::Add,
             2 => Self::Multiply,
@@ -60,13 +60,13 @@ impl Op {
 }
 
 #[derive(Clone)]
-pub(crate) struct Program(Vec<i32>);
+pub(crate) struct Program(Vec<i64>);
 
 impl Program {
     pub(crate) fn from(s: &str) -> Self {
-        let program: Vec<i32> = s
+        let program: Vec<i64> = s
             .split(",")
-            .filter_map(|x| x.parse::<i32>().ok())
+            .filter_map(|x| x.parse::<i64>().ok())
             .collect();
 
         Self(program)
@@ -74,7 +74,7 @@ impl Program {
 }
 
 impl Computer {
-    pub fn new(program: Program, inputs: Vec<i32>) -> Self {
+    pub fn new(program: Program, inputs: Vec<i64>) -> Self {
         Self {
             ip: 0,
             rb: 0,
@@ -83,7 +83,7 @@ impl Computer {
         }
     }
 
-    pub fn push_input(&mut self, input: i32) {
+    pub fn push_input(&mut self, input: i64) {
         self.inputs.push_back(input);
     }
 
@@ -134,8 +134,8 @@ impl Computer {
                 let result = match op {
                     Op::Add => values[0..2].iter().sum(),
                     Op::Multiply => values[0..2].iter().product(),
-                    Op::LessThan => (values[0] < values[1]) as i32,
-                    Op::Equals => (values[0] == values[1]) as i32,
+                    Op::LessThan => (values[0] < values[1]) as i64,
+                    Op::Equals => (values[0] == values[1]) as i64,
                     _ => unreachable!(),
                 };
                 self.write_memory(params[2], modes[2], result);
@@ -190,7 +190,7 @@ impl Computer {
                 }
             }
             Op::AdjustRelativeBase => {
-                self.rb = ((self.rb as i32) + self.mem[self.ip + 1]) as usize;
+                self.rb = ((self.rb as i64) + self.mem[self.ip + 1]) as usize;
                 Ok(StepResult::Continue(self.ip + 2, None))
             }
             Op::Halt => {
@@ -199,44 +199,48 @@ impl Computer {
         }
     }
 
-    fn decode_modes(instruction: i32, param_count: usize) -> Vec<Mode> {
+    fn decode_modes(instruction: i64, param_count: usize) -> Vec<Mode> {
         let mut modes = Vec::new();
 
         for i in 0..param_count {
-            let mod_div = 10_i32.pow(i as u32 + 3);
-            let div_div = 10_i32.pow(i as u32 + 2);
+            let mod_div = 10_i64.pow(i as u32 + 3);
+            let div_div = 10_i64.pow(i as u32 + 2);
             modes.push(Mode::from((instruction % mod_div) / div_div));
         }
 
         modes
     }
 
-    fn write_memory(&mut self, param: i32, mode: Mode, value: i32) {
+    fn write_memory(&mut self, param: i64, mode: Mode, value: i64) {
         let addr = self.address(param, mode);
+
+        if addr >= self.mem.len() {
+            self.mem.resize(addr + 1, 0);
+        }
 
         self.mem[addr] = value;
     }
 
-    fn address(&self, param: i32, mode: Mode) -> usize {
+    fn address(&self, param: i64, mode: Mode) -> usize {
         match mode {
             Mode::Position => param as usize,
             Mode::Immediate => panic!(),
-            Mode::Relative => ((self.rb as i32) + param) as usize,
+            Mode::Relative => ((self.rb as i64) + param) as usize,
         }
     }
 
-    fn read_memory(&self, param: i32, mode: Mode) -> i32 {
+    fn read_memory(&self, param: i64, mode: Mode) -> i64 {
         match mode {
             Mode::Position
             | Mode::Relative => {
                 let addr = self.address(param, mode);
-                self.mem[addr]
+                *self.mem.get(addr).unwrap_or(&0)
             }
             Mode::Immediate => param,
         }
     }
 
-    fn address_params(&self, params: &[i32], modes: &[Mode]) -> Vec<i32> {
+    fn address_params(&self, params: &[i64], modes: &[Mode]) -> Vec<i64> {
         params
             .iter()
             .zip(modes.iter())
@@ -253,7 +257,7 @@ enum Mode {
 }
 
 impl Mode {
-    fn from(mode: i32) -> Self {
+    fn from(mode: i64) -> Self {
         match mode {
             0 => Self::Position,
             1 => Self::Immediate,

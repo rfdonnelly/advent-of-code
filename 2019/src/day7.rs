@@ -19,7 +19,7 @@ pub(crate) fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn day7() -> (i32, i32) {
+fn day7() -> (i64, i64) {
     let input = fs::read_to_string("input/7").unwrap();
 
     let program: Program =
@@ -31,7 +31,7 @@ fn day7() -> (i32, i32) {
     (part1(&program), part2(&program))
 }
 
-fn part1(program: &Program) -> i32 {
+fn part1(program: &Program) -> i64 {
     let phase_permutations = (0..5)
         .into_iter()
         .permutations(5);
@@ -42,7 +42,7 @@ fn part1(program: &Program) -> i32 {
         .unwrap()
 }
 
-fn part2(program: &Program) -> i32 {
+fn part2(program: &Program) -> i64 {
     let phase_permutations = (5..10)
         .into_iter()
         .permutations(5);
@@ -55,8 +55,8 @@ fn part2(program: &Program) -> i32 {
 
 fn amplify(
     program: &Program,
-    phases: &[i32],
-) -> i32 {
+    phases: &[i64],
+) -> i64 {
     let mut amplifiers: Vec<Computer> = phases
         .iter()
         .map(|&phase| Computer::new(program.clone(), vec![phase]))
@@ -76,8 +76,8 @@ fn amplify(
 
 fn amplify_with_feedback(
     program: &Program,
-    phases: &[i32],
-) -> i32 {
+    phases: &[i64],
+) -> i64 {
     let mut amplifiers: Vec<Computer> = phases
         .iter()
         .map(|&phase| Computer::new(program.clone(), vec![phase]))

@@ -16,7 +16,7 @@ pub(crate) fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn day5() -> (i32, i32) {
+fn day5() -> (i64, i64) {
     let input = fs::read_to_string("input/5").unwrap();
 
     let program: Program =
@@ -28,7 +28,7 @@ fn day5() -> (i32, i32) {
     (part1(program.clone()), part2(program.clone()))
 }
 
-fn part1(program: Program) -> i32 {
+fn part1(program: Program) -> i64 {
     *Computer::new(program, vec![1])
         .run()
         .unwrap()
@@ -37,7 +37,7 @@ fn part1(program: Program) -> i32 {
         .unwrap()
 }
 
-fn part2(program: Program) -> i32 {
+fn part2(program: Program) -> i64 {
     *Computer::new(program, vec![5])
         .run()
         .unwrap()
