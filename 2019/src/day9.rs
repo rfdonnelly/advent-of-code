@@ -38,7 +38,12 @@ fn part1(program: &Program) -> i64 {
 }
 
 fn part2(program: &Program) -> i64 {
-    0
+    *Computer::new(program.clone(), vec![2])
+        .run()
+        .unwrap()
+        .outputs
+        .last()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -47,6 +52,6 @@ mod tests {
 
     #[test]
     fn test_day9() {
-        assert_eq!(day9(), (4261108180, 0))
+        assert_eq!(day9(), (4261108180, 77944))
     }
 }
