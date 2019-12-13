@@ -36,7 +36,7 @@ fn part1(program: &Program) -> usize {
             .unwrap();
 
     let instructions = instructions_from_outputs(&result.outputs);
-    let board = board_from_instructions(&instructions);
+    let board = board_from_instructions(instructions);
 
     board
         .values()
@@ -99,14 +99,13 @@ impl Instruction {
     }
 }
 
-fn instructions_from_outputs(outputs: &[i64]) -> Vec<Instruction> {
+fn instructions_from_outputs(outputs: &[i64]) -> impl Iterator<Item=Instruction> + '_ {
     outputs
         .chunks(3)
         .map(|chunk| Instruction::new(chunk[0], chunk[1], chunk[2]))
-        .collect()
 }
 
-fn board_from_instructions(instructions: &[Instruction]) -> HashMap<Point, Tile> {
+fn board_from_instructions(instructions: impl Iterator<Item=Instruction>) -> HashMap<Point, Tile> {
     let mut map = HashMap::new();
 
     for instruction in instructions {
