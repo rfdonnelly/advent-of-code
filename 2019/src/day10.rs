@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -13,7 +14,7 @@ pub(crate) fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn day10() -> (usize, usize) {
+fn day10() -> (usize, i32) {
     let input = fs::read_to_string("input/10").unwrap();
 
     let points = parse_input(&input);
@@ -38,14 +39,14 @@ impl Point {
             None
         } else {
             let xdiff = (self.x - b.x) as f64;
-            let ydiff = (b.y - self.y) as f64;
-            Some(f64_to_u32(ydiff.atan2(xdiff)))
+            let ydiff = (self.y - b.y) as f64;
+            Some(f64_to_u32(xdiff.atan2(ydiff)))
         }
     }
 
     fn distance(&self, b: &Point) -> u32 {
-        let xdiff = (self.x - b.x) as u32;
-        let ydiff = (b.y - self.y) as u32;
+        let xdiff = self.x - b.x;
+        let ydiff = b.y - self.y;
         ((xdiff.pow(2) + ydiff.pow(2)) as f64).sqrt() as u32
     }
 }
@@ -71,15 +72,32 @@ fn parse_input(s: &str) -> Vec<Point> {
 }
 
 fn part1(points: &[Point]) -> usize {
-    let (point, unique) =
+    let (_point, num_detected) = asteroid_with_best_location(points);
+
+    num_detected
+}
+
+fn part2(points: &[Point]) -> i32 {
+    let (point, _num_detected) = asteroid_with_best_location(points);
+    let point_angles = point_angles(point, points);
+    let mut radial_map = radial_map(&point_angles);
+    sort_radial_map_by_distance(point, &mut radial_map);
+    let flat_map = flatten_radial_map(&mut radial_map);
+    let asteroid_200 = flat_map.get(200).unwrap();
+
+    asteroid_200.x * 100 + asteroid_200.y
+}
+
+type Radians = u32;
+type RadialMap = HashMap<Radians, Vec<Point>>;
+
+fn asteroid_with_best_location(points: &[Point]) -> (&Point, usize) {
     points
         .iter()
         .map(|point| {
-            let angles = angles(point, points);
+            let point_angles = point_angles(point, points);
 
-            // println!("{} {}", point, angles.iter().map(|(point, angle)| format!("{}:{}", point, angle)).collect::<Vec<String>>().join(" "));
-
-            let angles: Vec<u32> = angles
+            let angles: Vec<u32> = point_angles
                 .into_iter()
                 .map(|(_point, angle)| angle)
                 .collect();
@@ -89,21 +107,11 @@ fn part1(points: &[Point]) -> usize {
 
             (point, unique)
         })
-        .max_by_key(|&(point, unique)| unique)
-        .unwrap();
-
-    // dbg!(point);
-    unique
+        .max_by_key(|&(_point, unique)| unique)
+        .unwrap()
 }
 
-fn part2(points: &[Point]) -> usize {
-    0
-}
-
-type Radians = u32;
-type RadialMap = HashMap<Radians, Vec<Point>>;
-
-fn angles(from: &Point, points: &[Point]) -> Vec<(Point, u32)> {
+fn point_angles(from: &Point, points: &[Point]) -> Vec<(Point, u32)> {
     points
         .iter()
         .filter_map(|point| from.angle_to(point).map(|angle| (*point, angle)))
@@ -136,13 +144,35 @@ fn radial_map(point_angles: &[(Point, u32)]) -> RadialMap {
 }
 
 fn sort_radial_map_by_distance(from: &Point, map: &mut RadialMap) {
-    for (angle, points) in map {
+    for (_angle, points) in map {
         points.sort_unstable_by_key(|point| point.distance(from));
     }
 }
 
-fn flatten_radial_map(map: &RadialMap) -> Vec<Point> {
-    Vec::new()
+fn flatten_radial_map(map: &mut RadialMap) -> Vec<Point> {
+    let mut vecdeque_map: HashMap<Radians, VecDeque<Point>> = HashMap::new();
+    for (k, v) in map.drain() {
+        vecdeque_map.insert(k, VecDeque::from(v));
+    }
+
+    let mut angles: Vec<Radians> = vecdeque_map.keys().cloned().collect();
+    angles.sort();
+
+    let mut flat_map = Vec::new();
+    let mut done = false;
+    while !done {
+        done = true;
+
+        for angle in &angles {
+            let points_with_angle = vecdeque_map.get_mut(&angle).unwrap();
+            if let Some(next_point_with_angle) = points_with_angle.pop_front() {
+                done = false;
+                flat_map.push(next_point_with_angle);
+            }
+        }
+    }
+
+    flat_map
 }
 
 #[cfg(test)]
@@ -257,11 +287,12 @@ mod tests {
     }
 
     #[test]
-    fn test_day10_() {
+    fn test_day10_angles_ascending() {
         let above = Point::new(0, 1).angle_to(&Point::new(0, 0));
-        let left = Point::new(0, 0).angle_to(&Point::new(1, 0));
-        let below = Point::new(0, 0).angle_to(&Point::new(0, 1));
         let right = Point::new(1, 0).angle_to(&Point::new(0, 0));
-        assert_eq!((above, right, below, left), (None, None, None, None));
+        let below = Point::new(0, 0).angle_to(&Point::new(0, 1));
+        let left = Point::new(0, 0).angle_to(&Point::new(1, 0));
+        let above_slight_left = Point::new(0, 10).angle_to(&Point::new(1, 0));
+        assert_eq!((above, right, below, left, above_slight_left), (Some(0), Some(1570), Some(3141), Some(4294965726), Some(4294967197)));
     }
 }
