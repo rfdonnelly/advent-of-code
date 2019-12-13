@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::ops::{Index, IndexMut};
 
 pub(crate) struct Computer {
     /// Instruction pointer
@@ -70,6 +71,20 @@ impl Program {
             .collect();
 
         Self(program)
+    }
+}
+
+impl Index<usize> for Program {
+    type Output = i64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+impl IndexMut<usize> for Program {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.0[index]
     }
 }
 

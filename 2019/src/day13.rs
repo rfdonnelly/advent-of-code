@@ -45,6 +45,14 @@ fn part1(program: &Program) -> usize {
 }
 
 fn part2(program: &Program) -> i64 {
+    let mut program = program.clone();
+    program[0] = 2;
+
+    let result =
+        Computer::new(program, vec![])
+            .run()
+            .unwrap();
+
     0
 }
 
