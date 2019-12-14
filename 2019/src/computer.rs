@@ -16,7 +16,7 @@ pub(crate) struct RunResult {
     pub state: State,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) enum State {
     Halt,
     WaitForInput,
