@@ -9,6 +9,7 @@ mod day8;
 mod day9;
 mod day10;
 mod day13;
+mod day14;
 
 mod computer;
 mod lib;
@@ -27,6 +28,7 @@ fn main() -> io::Result<()> {
     day9::main()?;
     day10::main()?;
     day13::main()?;
+    day14::main()?;
 
     Ok(())
 }
