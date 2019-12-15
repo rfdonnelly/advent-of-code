@@ -34,25 +34,24 @@ impl DivCeil for usize {
 }
 
 #[derive(Clone, Debug)]
-struct Chemical {
-    name: String,
-    units: usize,
+struct Pair {
+    id: String,
+    count: usize,
 }
 
-impl From<&str> for Chemical {
+impl From<&str> for Pair {
     fn from(s: &str) -> Self {
-        let mut units_name = s.split(" ");
-        let units = units_name.next().unwrap().parse::<usize>().unwrap();
-        let name = units_name.next().unwrap().into();
-        Self {name, units}
+        let mut count_id = s.split(" ");
+        let count = count_id.next().unwrap().parse::<usize>().unwrap();
+        let id = count_id.next().unwrap().into();
+        Self {id, count}
     }
 }
 
 #[derive(Clone, Debug)]
 struct Reaction {
-    id: String,
-    units: usize,
-    children: HashMap<String, usize>,
+    output: Pair,
+    inputs: Vec<Pair>,
 }
 
 impl From<&str> for Reaction {
@@ -61,24 +60,14 @@ impl From<&str> for Reaction {
         let inputs = inputs_output.next().unwrap();
         let output = inputs_output.next().unwrap();
 
-        let inputs: Vec<Chemical> = inputs
+        let inputs: Vec<Pair> = inputs
             .split(", ")
-            .map(Chemical::from)
+            .map(Pair::from)
             .collect();
 
-        let output = Chemical::from(output);
+        let output = Pair::from(output);
 
-        let mut reaction = Self {
-            id: output.name,
-            units: output.units,
-            children: HashMap::new(),
-        };
-
-        for input in inputs {
-            reaction.children.insert(input.name, input.units);
-        }
-
-        reaction
+        Self {output, inputs}
     }
 }
 
@@ -97,21 +86,21 @@ fn part1(reactions: Vec<Reaction>) -> usize {
         let reaction = map.get(current).unwrap();
         let output_need = needs.get(current).unwrap();
 
-        let multiplier = output_need.div_ceil(reaction.units);
+        let multiplier = output_need.div_ceil(reaction.output.count);
         // println!("current:{} multiplier:{}", current, multiplier);
-        for (id, units) in &reaction.children {
+        for input in &reaction.inputs {
             let input_need = needs
-                .entry(&id)
+                .entry(&input.id)
                 .or_insert(0);
 
-            let input_need_delta = multiplier * units;
-            // println!("  input:{} {} need:{} delta:{}", units, id, input_need, input_need_delta);
+            let input_need_delta = multiplier * input.count;
+            // println!("  input:{} {} need:{} delta:{}", input.count, input.id, input_need, input_need_delta);
             *input_need += input_need_delta;
 
-            let visit = map.contains_key::<str>(&id) && !visited.contains::<str>(&id);
+            let visit = map.contains_key::<str>(&input.id) && !visited.contains::<str>(&input.id);
             if visit {
-                to_visit.push_back(&id);
-                visited.insert(&id);
+                to_visit.push_back(&input.id);
+                visited.insert(&input.id);
 
             }
         }
@@ -125,7 +114,7 @@ fn output_map<'a>(reactions: &'a [Reaction]) -> HashMap<&'a str, &'a Reaction> {
     let mut output_map = HashMap::new();
 
     for reaction in reactions {
-        output_map.insert(reaction.id.as_str(), reaction);
+        output_map.insert(reaction.output.id.as_str(), reaction);
     }
 
     output_map
@@ -136,9 +125,9 @@ fn input_map<'a>(reactions: &'a [Reaction]) -> HashMap<&'a str, Vec<&'a Reaction
     let mut input_map = HashMap::new();
 
     for reaction in reactions {
-        for (child_id, _child_units) in &reaction.children {
+        for input in &reaction.inputs {
             input_map
-                .entry(child_id.as_str())
+                .entry(input.id.as_str())
                 .or_insert(Vec::new())
                 .push(reaction);
         }
