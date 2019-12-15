@@ -121,6 +121,8 @@ fn render_pixel(pixel: &Pixel) -> char {
 mod tests {
     use super::*;
 
+    use indoc::indoc;
+
     #[test]
     fn test_part2_example1() {
         let input = "0222112222120000";
@@ -143,7 +145,13 @@ mod tests {
 
     #[test]
     fn test_day8() {
-        let part2 = " ##    ## #### #  # ###  \n#  #    #    # #  # #  # \n#       #   #  #### #  # \n#       #  #   #  # ###  \n#  # #  # #    #  # # #  \n ##   ##  #### #  # #  # ";
+        let part2 = indoc!("
+             ##    ## #### #  # ###  
+            #  #    #    # #  # #  # 
+            #       #   #  #### #  # 
+            #       #  #   #  # ###  
+            #  # #  # #    #  # # #  
+             ##   ##  #### #  # #  # ");
         assert_eq!(day8(), (2159, part2.into()))
     }
 }
