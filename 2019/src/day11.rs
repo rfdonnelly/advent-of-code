@@ -19,7 +19,7 @@ pub(crate) fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn day11() -> (usize, i64) {
+fn day11() -> (usize, String) {
     let input = fs::read_to_string("input/11").unwrap();
 
     let program: Program =
@@ -28,7 +28,7 @@ fn day11() -> (usize, i64) {
         .next()
         .unwrap();
 
-    (part1(program.clone()), part2(&program))
+    (part1(program.clone()), part2(program))
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
@@ -134,10 +134,12 @@ impl Into<i64> for Color {
     }
 }
 
+type Map = HashMap<Point, Color>;
+
 struct RobotState {
     direction: Direction,
     location: Point,
-    map: HashMap<Point, Color>,
+    map: Map,
 }
 
 impl RobotState {
@@ -145,7 +147,7 @@ impl RobotState {
         Self {
             direction: Direction::Up,
             location: Point::new(0, 0),
-            map: HashMap::new(),
+            map: Map::new(),
         }
     }
 
@@ -164,6 +166,13 @@ impl RobotState {
 
 fn part1(program: Program) -> usize {
     let mut state = RobotState::new();
+
+    run(program, &mut state);
+
+    state.map.len()
+}
+
+fn run(program: Program, state: &mut RobotState) {
     let mut computer = Computer::new(program, vec![]);
 
     loop {
@@ -172,7 +181,7 @@ fn part1(program: Program) -> usize {
 
         match result.state {
             RunState::Halt => {
-                return state.map.len();
+                return;
             }
             RunState::WaitForInput => {
                 let color = result.outputs[0];
@@ -183,8 +192,37 @@ fn part1(program: Program) -> usize {
     }
 }
 
-fn part2(program: &Program) -> i64 {
-    0
+fn part2(program: Program) -> String {
+    let mut state = RobotState::new();
+    state.map.insert(Point::new(0, 0), Color::White);
+
+    run(program, &mut state);
+
+    let points = white_points(&state.map);
+    render(&points)
+}
+
+fn white_points(map: &Map) -> Vec<Point> {
+    map
+        .iter()
+        .filter_map(|(&point, color)| {
+            match color {
+                Color::White => Some(point),
+                Color::Black => None,
+            }
+        })
+        .collect()
+}
+
+fn render(points: &[Point]) -> String {
+    "".into()
+}
+
+fn edges(points: &[Point]) -> (Point, Point) {
+    let mut max = Point::new(0, 0);
+    let mut min = Point::new(0, 0);
+
+    (min, max)
 }
 
 #[cfg(test)]
