@@ -159,13 +159,22 @@ mod tests {
             10 ORE => 1 D
             15 B => 5 A
             5 D => 5 B
-            7 A, 5 B => 1 FUEL
+            5 B, 7 A => 1 FUEL
         ");
 
         // A: 7
         // B: 5 + 2*15 = 35
         // D: 7*5 = 35
         // ORE: 35*10 = 350
+
+        // 10 ORE => 1 D
+        // 5 D => 5 B ==> (5 (10 ORE)) => 5 B
+        // 15 B => 5 A ==> (3 (5 (10 ORE)) => 5 A
+        // 5 B, 7 A => 1 FUEL ==> (5 (10 ORE)), (2 (3 (5 (10 ORE)))) => 1 FUEL
+        //   ==> 50 ORE + 300 ORE
+
+        // Need to visit nodes in certain order
+        // Cannot visit nodes before visiting dependent nodes
 
         let reactions: Vec<Reaction> = parse_input(&input, Reaction::from);
         assert_eq!(part1(reactions), 350);
