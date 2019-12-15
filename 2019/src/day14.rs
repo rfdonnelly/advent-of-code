@@ -83,7 +83,7 @@ impl From<&str> for Reaction {
 }
 
 fn part1(reactions: Vec<Reaction>) -> usize {
-    let map = output_map(reactions);
+    let map = output_map(&reactions);
 
     let mut needs: HashMap<&str, usize> = HashMap::new();
     let mut to_visit: VecDeque<&str> = VecDeque::new();
@@ -121,27 +121,26 @@ fn part1(reactions: Vec<Reaction>) -> usize {
 }
 
 /// Lookup reactions by their output
-fn output_map(reactions: Vec<Reaction>) -> HashMap<String, Reaction> {
-    let mut map = HashMap::new();
-    let mut reactions = reactions;
+fn output_map<'a>(reactions: &'a [Reaction]) -> HashMap<&'a str, &'a Reaction> {
+    let mut output_map = HashMap::new();
 
-    for reaction in reactions.drain(..) {
-        map.insert(reaction.id.clone(), reaction);
+    for reaction in reactions {
+        output_map.insert(reaction.id.as_str(), reaction);
     }
 
-    map
+    output_map
 }
 
 /// Lookup reactions by their input
-fn input_map(reactions: Vec<Reaction>) -> HashMap<String, Vec<Reaction>> {
+fn input_map<'a>(reactions: &'a [Reaction]) -> HashMap<&'a str, Vec<&'a Reaction>> {
     let mut input_map = HashMap::new();
 
     for reaction in reactions {
         for (child_id, _child_units) in &reaction.children {
             input_map
-                .entry(child_id.clone())
+                .entry(child_id.as_str())
                 .or_insert(Vec::new())
-                .push(reaction.clone());
+                .push(reaction);
         }
     }
 
