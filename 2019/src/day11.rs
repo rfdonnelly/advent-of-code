@@ -14,7 +14,7 @@ pub(crate) fn main() -> io::Result<()> {
     let (part1, part2) = day11();
 
     println!("day11::part1: {}", part1);
-    println!("day11::part2: {}", part2);
+    println!("day11::part2:\n{}", part2);
 
     Ok(())
 }
@@ -199,7 +199,7 @@ fn part2(program: Program) -> String {
     run(program, &mut state);
 
     let points = white_points(&state.map);
-    render(&points)
+    render(points)
 }
 
 fn white_points(map: &Map) -> Vec<Point> {
@@ -214,23 +214,85 @@ fn white_points(map: &Map) -> Vec<Point> {
         .collect()
 }
 
-fn render(points: &[Point]) -> String {
-    "".into()
+fn render(points: Vec<Point>) -> String {
+    let (min, max) = corners(&points);
+    let translation = Point::new(min.x * -1, min.y * -1);
+
+    let mut points = points;
+    let mut max = max;
+    translate_point(&mut max, translation);
+    translate_points(&mut points, translation);
+
+    flip(&mut points, max.y);
+
+    let width = max.x + 1;
+    let height = max.y + 1;
+    let mut bitmap: Vec<char> = vec![' '; (width * height) as usize];
+    for point in points {
+        bitmap[(point.y * width + point.x) as usize] = '#';
+    }
+
+    bitmap
+        .chunks(width as usize)
+        .map(|line| line.iter().collect::<String>())
+        .collect::<Vec<String>>()
+        .join("\n")
 }
 
-fn edges(points: &[Point]) -> (Point, Point) {
-    let mut max = Point::new(0, 0);
-    let mut min = Point::new(0, 0);
+fn corners(points: &[Point]) -> (Point, Point) {
+    let mut max = Point::new(i64::min_value(), i64::min_value());
+    let mut min = Point::new(i64::max_value(), i64::max_value());
+
+    for point in points {
+        if point.x < min.x {
+            min.x = point.x;
+        }
+        if point.x > max.x {
+            max.x = point.x;
+        }
+        if point.y < min.y {
+            min.y = point.y;
+        }
+        if point.y > max.y {
+            max.y = point.y;
+        }
+    }
 
     (min, max)
+}
+
+fn translate_points(points: &mut [Point], translation: Point) {
+    for point in points.iter_mut() {
+        translate_point(point, translation);
+    }
+}
+
+fn translate_point(point: &mut Point, translation: Point) {
+    point.x += translation.x;
+    point.y += translation.y;
+}
+
+fn flip(points: &mut [Point], max_y: i64) {
+    for point in points {
+        point.y = max_y - point.y;
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    use indoc::indoc;
+
     #[test]
     fn test_day11() {
-        assert_eq!(day11(), (1785, 1))
+        let part2 = indoc!("
+            #  #   ##  ##  #      ## #### #### #  #
+            #  #    # #  # #       #    # #    #  #
+            ####    # #  # #       #   #  ###  ####
+            #  #    # #### #       #  #   #    #  #
+            #  # #  # #  # #    #  # #    #    #  #
+            #  #  ##  #  # ####  ##  #### #    #  #");
+        assert_eq!(day11(), (1785, part2.into()))
     }
 }
