@@ -34,12 +34,12 @@ impl DivCeil for usize {
 }
 
 #[derive(Clone, Debug)]
-struct ChemicalUnits {
+struct Chemical {
     name: String,
     units: usize,
 }
 
-impl From<&str> for ChemicalUnits {
+impl From<&str> for Chemical {
     fn from(s: &str) -> Self {
         let mut units_name = s.split(" ");
         let units = units_name.next().unwrap().parse::<usize>().unwrap();
@@ -50,8 +50,9 @@ impl From<&str> for ChemicalUnits {
 
 #[derive(Clone, Debug)]
 struct Reaction {
-    inputs: Vec<ChemicalUnits>,
-    output: ChemicalUnits,
+    id: String,
+    units: usize,
+    children: HashMap<String, usize>,
 }
 
 impl From<&str> for Reaction {
@@ -60,19 +61,29 @@ impl From<&str> for Reaction {
         let inputs = inputs_output.next().unwrap();
         let output = inputs_output.next().unwrap();
 
-        let inputs: Vec<ChemicalUnits> = inputs
+        let inputs: Vec<Chemical> = inputs
             .split(", ")
-            .map(ChemicalUnits::from)
+            .map(Chemical::from)
             .collect();
 
-        let output = ChemicalUnits::from(output);
+        let output = Chemical::from(output);
 
-        Self {inputs, output}
+        let mut reaction = Self {
+            id: output.name,
+            units: output.units,
+            children: HashMap::new(),
+        };
+
+        for input in inputs {
+            reaction.children.insert(input.name, input.units);
+        }
+
+        reaction
     }
 }
 
 fn part1(reactions: Vec<Reaction>) -> usize {
-    let map = map_from_slice(reactions);
+    let map = output_map(reactions);
 
     let mut needs: HashMap<&str, usize> = HashMap::new();
     let mut to_visit: VecDeque<&str> = VecDeque::new();
@@ -86,21 +97,21 @@ fn part1(reactions: Vec<Reaction>) -> usize {
         let reaction = map.get(current).unwrap();
         let output_need = needs.get(current).unwrap();
 
-        let multiplier = output_need.div_ceil(reaction.output.units);
+        let multiplier = output_need.div_ceil(reaction.units);
         // println!("current:{} multiplier:{}", current, multiplier);
-        for input in &reaction.inputs {
+        for (id, units) in &reaction.children {
             let input_need = needs
-                .entry(&input.name)
+                .entry(&id)
                 .or_insert(0);
 
-            let input_need_delta = multiplier * input.units;
-            // println!("  input:{} {} need:{} delta:{}", input.units, input.name, input_need, input_need_delta);
+            let input_need_delta = multiplier * units;
+            // println!("  input:{} {} need:{} delta:{}", units, id, input_need, input_need_delta);
             *input_need += input_need_delta;
 
-            let visit = map.contains_key(&input.name) && !visited.contains::<str>(&input.name);
+            let visit = map.contains_key::<str>(&id) && !visited.contains::<str>(&id);
             if visit {
-                to_visit.push_back(&input.name);
-                visited.insert(&input.name);
+                to_visit.push_back(&id);
+                visited.insert(&id);
 
             }
         }
@@ -109,15 +120,32 @@ fn part1(reactions: Vec<Reaction>) -> usize {
     *needs.get("ORE").unwrap()
 }
 
-fn map_from_slice(reactions: Vec<Reaction>) -> HashMap<String, Reaction> {
+/// Lookup reactions by their output
+fn output_map(reactions: Vec<Reaction>) -> HashMap<String, Reaction> {
     let mut map = HashMap::new();
     let mut reactions = reactions;
 
     for reaction in reactions.drain(..) {
-        map.insert(reaction.output.name.clone(), reaction);
+        map.insert(reaction.id.clone(), reaction);
     }
 
     map
+}
+
+/// Lookup reactions by their input
+fn input_map(reactions: Vec<Reaction>) -> HashMap<String, Vec<Reaction>> {
+    let mut input_map = HashMap::new();
+
+    for reaction in reactions {
+        for (child_id, _child_units) in &reaction.children {
+            input_map
+                .entry(child_id.clone())
+                .or_insert(Vec::new())
+                .push(reaction.clone());
+        }
+    }
+
+    input_map
 }
 
 fn part2(reactions: Vec<Reaction>) -> usize {
