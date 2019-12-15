@@ -154,6 +154,24 @@ mod tests {
     }
 
     #[test]
+    fn test_part1_simple3() {
+        let input = indoc!("
+            10 ORE => 1 D
+            15 B => 5 A
+            5 D => 5 B
+            7 A, 5 B => 1 FUEL
+        ");
+
+        // A: 7
+        // B: 5 + 2*15 = 35
+        // D: 7*5 = 35
+        // ORE: 35*10 = 350
+
+        let reactions: Vec<Reaction> = parse_input(&input, Reaction::from);
+        assert_eq!(part1(reactions), 350);
+    }
+
+    #[test]
     fn test_part1_example0() {
         let input = indoc!("
             9 ORE => 2 A
