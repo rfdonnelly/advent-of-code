@@ -6,8 +6,10 @@ pub(crate) struct Computer {
     ip: usize,
     /// Relative base
     rb: usize,
-    /// Memory
-    mem: Vec<i64>,
+    /// Read-only Memory
+    rom: Vec<i64>,
+    /// Random-access Memory
+    ram: Vec<i64>,
     inputs: VecDeque<i64>,
 }
 
@@ -90,16 +92,26 @@ impl IndexMut<usize> for Program {
 
 impl Computer {
     pub fn new(program: Program, inputs: Vec<i64>) -> Self {
+        let ram = program.0.clone();
+        let rom = program.0;
+
         Self {
             ip: 0,
             rb: 0,
-            mem: program.0,
+            rom,
+            ram,
             inputs: inputs.into(),
         }
     }
 
     pub fn push_input(&mut self, input: i64) {
         self.inputs.push_back(input);
+    }
+
+    pub fn reset(&mut self) {
+        self.ip = 0;
+        self.rb = 0;
+        self.ram = self.rom.clone();
     }
 
     pub fn run(&mut self) -> Result<RunResult, ()> {
@@ -130,7 +142,7 @@ impl Computer {
     }
 
     fn step(&mut self) -> Result<StepResult, ()> {
-        let instruction = self.mem[self.ip];
+        let instruction = self.ram[self.ip];
         let op = Op::from_instruction(instruction);
 
         match op {
@@ -139,9 +151,9 @@ impl Computer {
             | Op::LessThan
             | Op::Equals => {
                 let params = [
-                    self.mem[self.ip + 1],
-                    self.mem[self.ip + 2],
-                    self.mem[self.ip + 3],
+                    self.ram[self.ip + 1],
+                    self.ram[self.ip + 2],
+                    self.ram[self.ip + 3],
                 ];
                 let modes = Self::decode_modes(instruction, params.len());
                 let values = self.address_params(&params, &modes);
@@ -160,7 +172,7 @@ impl Computer {
             Op::Input
             | Op::Output => {
                 let params = [
-                    self.mem[self.ip + 1],
+                    self.ram[self.ip + 1],
                 ];
                 let modes = Self::decode_modes(instruction, params.len());
 
@@ -186,8 +198,8 @@ impl Computer {
             Op::JumpIfTrue
             | Op::JumpIfFalse => {
                 let params = [
-                    self.mem[self.ip + 1],
-                    self.mem[self.ip + 2],
+                    self.ram[self.ip + 1],
+                    self.ram[self.ip + 2],
                 ];
                 let modes = Self::decode_modes(instruction, params.len());
                 let values = self.address_params(&params, &modes);
@@ -206,7 +218,7 @@ impl Computer {
             }
             Op::AdjustRelativeBase => {
                 let params = [
-                    self.mem[self.ip + 1]
+                    self.ram[self.ip + 1]
                 ];
                 let modes = Self::decode_modes(instruction, params.len());
                 let values = self.address_params(&params, &modes);
@@ -235,11 +247,11 @@ impl Computer {
     fn write_memory(&mut self, param: i64, mode: Mode, value: i64) {
         let addr = self.address(param, mode);
 
-        if addr >= self.mem.len() {
-            self.mem.resize(addr + 1, 0);
+        if addr >= self.ram.len() {
+            self.ram.resize(addr + 1, 0);
         }
 
-        self.mem[addr] = value;
+        self.ram[addr] = value;
     }
 
     fn address(&self, param: i64, mode: Mode) -> usize {
@@ -255,7 +267,7 @@ impl Computer {
             Mode::Position
             | Mode::Relative => {
                 let addr = self.address(param, mode);
-                *self.mem.get(addr).unwrap_or(&0)
+                *self.ram.get(addr).unwrap_or(&0)
             }
             Mode::Immediate => param,
         }
