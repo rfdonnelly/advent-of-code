@@ -3,36 +3,15 @@ use itertools::Itertools;
 
 use crate::lib::{
     self,
-    Day,
     Error
 };
 
-pub struct Day01 {
-    data: Vec<u32>
-}
+pub fn day(input: &str) -> Result<()> {
+    let data = lib::parse_input(input)?;
+    println!("part1:\n{}", part1(&data)?);
+    println!("part2:\n{}", part2(&data)?);
 
-impl Day for Day01 {
-    fn parse(&mut self, input: &str) -> Result<()> {
-        self.data = lib::parse_input(input)?;
-
-        Ok(())
-    }
-
-    fn part1(&self) -> Result<String> {
-        Ok(format!("{}", part1(&self.data)?))
-    }
-
-    fn part2(&self) -> Result<String> {
-        Ok(format!("{}", part2(&self.data)?))
-    }
-}
-
-impl Day01 {
-    pub fn new() -> Self {
-        Self {
-            data: Vec::new(),
-        }
-    }
+    Ok(())
 }
 
 fn part1(input: &[u32]) -> Result<u32> {
@@ -60,8 +39,7 @@ mod test {
     use super::*;
     use indoc::indoc;
 
-    fn input() -> Vec<u32> {
-        let mut day = Day01::new();
+    fn data() -> Vec<u32> {
         let input = indoc!{"
             1721
             979
@@ -70,13 +48,13 @@ mod test {
             675
             1456
         "};
-        day.parse(input).unwrap();
-        day.data
+        lib::parse_input(input).unwrap()
     }
 
     #[test]
     fn examples() {
-        assert_eq!(part1(&input()).unwrap(), 514579);
-        assert_eq!(part2(&input()).unwrap(), 241861950);
+        let data = data();
+        assert_eq!(part1(&data).unwrap(), 514579);
+        assert_eq!(part2(&data).unwrap(), 241861950);
     }
 }

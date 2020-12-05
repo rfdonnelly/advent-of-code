@@ -36,9 +36,3 @@ where
         )
         .collect::<Result<Vec<T>, _>>()
 }
-
-pub trait Day {
-    fn parse(&mut self, input: &str) -> Result<()>;
-    fn part1(&self) -> Result<String>;
-    fn part2(&self) -> Result<String>;
-}
