@@ -1,6 +1,7 @@
 mod lib;
 mod day01;
 mod day02;
+mod day03;
 
 use anyhow::{Context, Result};
 
@@ -8,6 +9,7 @@ fn main() -> Result<()> {
     let days = [
         day01::day,
         day02::day,
+        day03::day,
     ];
 
     for (day_idx, day) in days.iter().enumerate() {
