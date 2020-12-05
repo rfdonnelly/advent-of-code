@@ -1,7 +1,11 @@
 use anyhow::Result;
 use itertools::Itertools;
 
-use crate::lib::{Day, Error};
+use crate::lib::{
+    self,
+    Day,
+    Error
+};
 
 pub struct Day01 {
     data: Vec<u32>
@@ -9,10 +13,7 @@ pub struct Day01 {
 
 impl Day for Day01 {
     fn parse(&mut self, input: &str) -> Result<()> {
-        self.data = input
-            .lines()
-            .map(|x| x.parse::<u32>())
-            .collect::<Result<Vec<_>, _>>()?;
+        self.data = lib::parse_input(input)?;
 
         Ok(())
     }
