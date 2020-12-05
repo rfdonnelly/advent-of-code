@@ -36,8 +36,8 @@ fn part2(input: &[u32]) -> Result<u32> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use indoc::indoc;
+    use super::lib;
 
     fn data() -> Vec<u32> {
         let input = indoc!{"
@@ -52,9 +52,12 @@ mod test {
     }
 
     #[test]
-    fn examples() {
-        let data = data();
-        assert_eq!(part1(&data).unwrap(), 514579);
-        assert_eq!(part2(&data).unwrap(), 241861950);
+    fn part1() {
+        assert_eq!(super::part1(&data()).unwrap(), 514579);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(super::part2(&data()).unwrap(), 241861950);
     }
 }
