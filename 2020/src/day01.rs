@@ -29,7 +29,7 @@ impl Day for Day01 {
 
 impl Day01 {
     pub fn new() -> Self {
-        Day01 {
+        Self {
             data: Vec::new(),
         }
     }
