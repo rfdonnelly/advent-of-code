@@ -2,7 +2,7 @@ use thiserror::Error;
 use anyhow::{Context, Result};
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 #[derive(Error, Debug)]
@@ -13,9 +13,11 @@ pub enum Error {
     ParseError,
 }
 
-pub fn load_input(day: usize) -> Result<String> {
-    let path = format!("{}/inputs/day{:02}", env!("CARGO_MANIFEST_DIR"), day);
-    let path = Path::new(&path);
+pub fn input_file_path(day: usize) -> PathBuf {
+    PathBuf::from(format!("{}/inputs/day{:02}", env!("CARGO_MANIFEST_DIR"), day))
+}
+
+pub fn load_input(path: &Path) -> Result<String> {
     Ok(fs::read_to_string(path)
        .with_context(|| format!("Failed to open: {}", path.display()))?)
 }

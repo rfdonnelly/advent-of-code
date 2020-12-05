@@ -1,7 +1,7 @@
 mod lib;
 mod day01;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 fn main() -> Result<()> {
     let days = [
@@ -9,8 +9,10 @@ fn main() -> Result<()> {
     ];
 
     for (day_idx, day) in days.iter().enumerate() {
-        let input = lib::load_input(day_idx + 1)?;
-        day(&input)?
+        let path = lib::input_file_path(day_idx + 1);
+        let input = lib::load_input(&path)?;
+        day(&input)
+            .with_context(|| format!("Failed to solve input: '{}'", path.display()))?;
     }
 
     Ok(())
