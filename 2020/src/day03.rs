@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 
-use crate::lib::{self, Error};
+use crate::lib;
 
 pub fn day(input: &str) -> Result<()> {
     let data = lib::parse_input(input)?;
@@ -34,7 +34,7 @@ fn part2(data: &[Entry]) -> Result<usize> {
 
 fn trees_on_slope(data: &[Entry], dx: usize, dy: usize) -> usize {
     let width = data[0].map.len();
-    let (count, x) = data.iter()
+    let (count, _) = data.iter()
         .enumerate()
         .filter_map(|(i, entry)|
             if i % dy == 0 {
@@ -43,14 +43,13 @@ fn trees_on_slope(data: &[Entry], dx: usize, dy: usize) -> usize {
                 None
             }
         )
-        .fold((0, 0), |(count, x), entry| {
-            let mod_x = x % width;
+        .fold((0, 0), |(count, x), entry|
             if entry.map[x % width] {
                 (count + 1, x + dx)
             } else {
                 (count, x + dx)
             }
-        });
+        );
 
     count
 }
