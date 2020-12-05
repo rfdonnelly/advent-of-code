@@ -3,6 +3,7 @@ mod day01;
 mod day02;
 mod day03;
 mod day04;
+mod day05;
 
 use anyhow::{Context, Result};
 
@@ -12,6 +13,7 @@ fn main() -> Result<()> {
         day02::day,
         day03::day,
         day04::day,
+        day05::day,
     ];
 
     for (day_idx, day) in days.iter().enumerate() {
