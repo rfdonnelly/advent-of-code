@@ -13,22 +13,35 @@ pub fn day(input: &str) -> Result<()> {
 }
 
 fn part1(data: &[Entry]) -> Result<usize> {
-    let width = data[0].map.len();
-    let (count, x) = data.iter().fold((0, 0), |(count, x), entry| {
-        let mod_x = x % width;
-        if entry.map[x % width] {
-            (count + 1, x + 3)
-        } else {
-            (count, x + 3)
-        }
-    });
-
-    Ok(count)
+    Ok(trees_on_slope(data, 3, 1))
 }
 
 fn part2(data: &[Entry]) -> Result<usize> {
     let count = 0;
     Ok(count)
+}
+
+fn trees_on_slope(data: &[Entry], dx: usize, dy: usize) -> usize {
+    let width = data[0].map.len();
+    let (count, x) = data.iter()
+        .enumerate()
+        .filter_map(|(i, entry)|
+            if i % dy == 0 {
+                Some(entry)
+            } else {
+                None
+            }
+        )
+        .fold((0, 0), |(count, x), entry| {
+            let mod_x = x % width;
+            if entry.map[x % width] {
+                (count + 1, x + dx)
+            } else {
+                (count, x + dx)
+            }
+        });
+
+    count
 }
 
 #[derive(Debug, Eq, PartialEq)]
