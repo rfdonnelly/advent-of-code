@@ -17,8 +17,19 @@ fn part1(data: &[Entry]) -> Result<usize> {
 }
 
 fn part2(data: &[Entry]) -> Result<usize> {
-    let count = 0;
-    Ok(count)
+    let slopes = [
+        (1, 1),
+        (3, 1),
+        (5, 1),
+        (7, 1),
+        (1, 2),
+    ];
+
+    Ok(
+        slopes.iter()
+            .map(|(dx, dy)| trees_on_slope(data, *dx, *dy))
+            .product()
+    )
 }
 
 fn trees_on_slope(data: &[Entry], dx: usize, dy: usize) -> usize {
@@ -102,8 +113,7 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn part2() {
-        assert_eq!(super::part2(&data()).unwrap(), 1);
+        assert_eq!(super::part2(&data()).unwrap(), 336);
     }
 }
