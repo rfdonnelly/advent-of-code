@@ -120,9 +120,4 @@ mod test {
     fn part1() {
         assert_eq!(super::part1(&seats()).unwrap(), 820);
     }
-
-    #[test]
-    fn part2() {
-        assert_eq!(super::part2(&seats()).unwrap(), 336);
-    }
 }
