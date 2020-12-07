@@ -34,7 +34,7 @@ fn part2(input: &str) -> Result<u32> {
                 .map(|person| {
                     let mut answers = 0u32;
                     for c in person.chars() {
-                        let index = (c as u32) - ('a' as u32);
+                        let index = (c as u8) - ('a' as u8);
                         answers |= 1 << index;
                     }
                     answers
