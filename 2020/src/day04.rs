@@ -5,10 +5,10 @@ use anyhow::Result;
 
 use crate::lib::{self, Error};
 
-pub fn day(input: &str) -> Result<()> {
-    let passports = parse_input(input)?;
-    println!("part1:\n{}", part1(&passports)?);
-    println!("part2:\n{}", part2(&passports)?);
+pub fn day(day: usize, input: &str) -> Result<()> {
+    let data = parse_input(input)?;
+    println!("day{:02}::part1:\n{}", day, part1(&data)?);
+    println!("day{:02}::part2:\n{}", day, part2(&data)?);
 
     Ok(())
 }

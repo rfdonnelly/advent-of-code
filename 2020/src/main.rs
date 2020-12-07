@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     for (day_idx, day) in days.iter().enumerate() {
         let path = lib::input_file_path(day_idx + 1);
         let input = lib::load_input(&path)?;
-        day(&input)
+        day(day_idx + 1, &input)
             .with_context(|| format!("Failed to solve input: '{}'", path.display()))?;
     }
 

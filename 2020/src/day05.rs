@@ -4,10 +4,10 @@ use anyhow::Result;
 
 use crate::lib;
 
-pub fn day(input: &str) -> Result<()> {
-    let seats = lib::parse_input(input)?;
-    println!("part1:\n{}", part1(&seats)?);
-    println!("part2:\n{}", part2(&seats)?);
+pub fn day(day: usize, input: &str) -> Result<()> {
+    let data = lib::parse_input(input)?;
+    println!("day{:02}::part1:\n{}", day, part1(&data)?);
+    println!("day{:02}::part2:\n{}", day, part2(&data)?);
 
     Ok(())
 }
