@@ -3,8 +3,6 @@ use std::str::FromStr;
 
 use anyhow::Result;
 
-use crate::lib::{self, Error};
-
 pub fn day(day: usize, input: &str) -> Result<()> {
     let data = parse_input(input)?;
     println!("day{:02}::part1: {}", day, part1(&data)?);
