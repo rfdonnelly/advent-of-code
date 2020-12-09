@@ -9,7 +9,7 @@ use crate::lib::{self, Error};
 pub fn day(day: usize, input: &str) -> Result<()> {
     let data = lib::parse_input(input)?;
     println!("day{:02}::part1: {}", day, part1(&data, 25)?);
-    println!("day{:02}::part2: {}", day, part2(&data)?);
+    println!("day{:02}::part2: {}", day, part2(&data, 25)?);
 
     Ok(())
 }
@@ -32,7 +32,17 @@ fn part1(values: &[u64], window_size: usize) -> Result<u64> {
     Ok(*bad_value)
 }
 
-fn part2(values: &[u64]) -> Result<u64> {
+fn part2(values: &[u64], window_size: usize) -> Result<u64> {
+    let bad_value = part1(values, window_size)?;
+    for window_size in 2..=values.len() {
+        let windows = values.windows(window_size);
+        for window in windows {
+            if window.iter().sum::<u64>() == bad_value {
+                return Ok(window.iter().min().unwrap() + window.iter().max().unwrap());
+            }
+        }
+    }
+
     Ok(0)
 }
 
@@ -76,6 +86,6 @@ mod test {
     #[test]
     #[ignore]
     fn part2() {
-        assert_eq!(super::part2(&data()).unwrap(), 0);
+        assert_eq!(super::part2(&data(), 5).unwrap(), 62);
     }
 }
