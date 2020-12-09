@@ -15,18 +15,21 @@ pub fn day(day: usize, input: &str) -> Result<()> {
 }
 
 fn part1(values: &[u64], window_size: usize) -> Result<u64> {
-    for window in values.windows(window_size + 1) {
-        let (sub_window, value) = window.split_at(window_size);
-        let value = value[0];
-        let is_sum_of_two_values_in_sub_window = sub_window.iter()
-            .combinations(2)
-            .map(|combination| combination[0] + combination[1])
-            .any(|sum| sum == value);
+    let bad_value = values.windows(window_size + 1)
+        .find(|window| {
+            let (sub_window, value) = window.split_at(window_size);
+            let value = value[0];
 
-        if !is_sum_of_two_values_in_sub_window { return Ok(value); }
-    }
+            !sub_window.iter()
+                .combinations(2)
+                .map(|comb| comb.into_iter().sum::<u64>())
+                .any(|sum| sum == value)
+        })
+        .ok_or(Error::NoSolution)?
+        .get(window_size)
+        .unwrap();
 
-    Err(Error::NoSolution)?
+    Ok(*bad_value)
 }
 
 fn part2(values: &[u64]) -> Result<u64> {
