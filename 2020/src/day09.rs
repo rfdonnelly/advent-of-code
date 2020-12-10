@@ -1,6 +1,3 @@
-use std::collections::HashSet;
-use std::str::FromStr;
-
 use anyhow::Result;
 use itertools::Itertools;
 
@@ -43,7 +40,7 @@ fn part2(values: &[u64], window_size: usize) -> Result<u64> {
         }
     }
 
-    Ok(0)
+    Err(Error::NoSolution)?
 }
 
 #[cfg(test)]
