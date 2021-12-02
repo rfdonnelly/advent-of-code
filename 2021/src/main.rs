@@ -2,9 +2,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 mod d01;
+mod d02;
 
 fn main() {
-    d01::run()
+    d01::run();
+    d02::run();
 }
 
 fn load_file<P>(path: P) -> String
