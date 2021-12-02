@@ -84,7 +84,7 @@ struct State {
 }
 
 impl State {
-    fn new() -> Self {
+    fn initial() -> Self {
         Self {
             x: 0,
             y: 0,
@@ -117,7 +117,7 @@ fn d02p2(input: &str) -> i32 {
     let p = input
         .lines()
         .map(Instruction::from)
-        .fold(State::new(), |state, instruction| state.next(instruction));
+        .fold(State::initial(), |state, instruction| state.next(instruction));
 
     p.x * p.y
 }
