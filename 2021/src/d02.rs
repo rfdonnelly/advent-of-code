@@ -93,21 +93,35 @@ impl Tuple {
     }
 }
 
+impl Add<Instruction> for Tuple {
+    type Output = Self;
+
+    fn add(self, other: Instruction) -> Self {
+        match other.direction {
+            Direction::Down => Self {
+                x: self.x,
+                y: self.y,
+                aim: self.aim + other.magnitude,
+            },
+            Direction::Up => Self {
+                x: self.x,
+                y: self.y,
+                aim: self.aim - other.magnitude,
+            },
+            Direction::Forward => Self {
+                x: self.x + other.magnitude,
+                y: self.y + self.aim * other.magnitude,
+                aim: self.aim,
+            },
+        }
+    }
+}
+
 fn d02p2(input: &str) -> i32 {
     let p = input
         .lines()
         .map(Instruction::from)
-        .fold(Tuple::new(), |mut acc, instr| {
-            match instr.direction {
-                Direction::Down => acc.aim += instr.magnitude,
-                Direction::Up => acc.aim -= instr.magnitude,
-                Direction::Forward => {
-                    acc.x += instr.magnitude;
-                    acc.y += acc.aim * instr.magnitude;
-                }
-            }
-            acc
-        });
+        .fold(Tuple::new(), |acc, instr| acc + instr);
 
     p.x * p.y
 }
