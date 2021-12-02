@@ -46,11 +46,11 @@ struct Vector {
 }
 
 impl From<Instruction> for Vector {
-    fn from(instr: Instruction) -> Self {
-        match instr.direction {
-            Direction::Forward => Self { x: instr.magnitude, y: 0 },
-            Direction::Down => Self { x: 0, y: instr.magnitude },
-            Direction::Up => Self { x: 0, y: 0 - instr.magnitude },
+    fn from(instruction: Instruction) -> Self {
+        match instruction.direction {
+            Direction::Forward => Self { x: instruction.magnitude, y: 0 },
+            Direction::Down => Self { x: 0, y: instruction.magnitude },
+            Direction::Up => Self { x: 0, y: 0 - instruction.magnitude },
         }
     }
 }
@@ -77,13 +77,13 @@ fn d02p1(input: &str) -> i32 {
     p.x * p.y
 }
 
-struct Tuple {
+struct State {
     x: i32,
     y: i32,
     aim: i32,
 }
 
-impl Tuple {
+impl State {
     fn new() -> Self {
         Self {
             x: 0,
@@ -91,26 +91,22 @@ impl Tuple {
             aim: 0,
         }
     }
-}
 
-impl Add<Instruction> for Tuple {
-    type Output = Self;
-
-    fn add(self, other: Instruction) -> Self {
-        match other.direction {
+    fn next(self, instruction: Instruction) -> Self {
+        match instruction.direction {
             Direction::Down => Self {
                 x: self.x,
                 y: self.y,
-                aim: self.aim + other.magnitude,
+                aim: self.aim + instruction.magnitude,
             },
             Direction::Up => Self {
                 x: self.x,
                 y: self.y,
-                aim: self.aim - other.magnitude,
+                aim: self.aim - instruction.magnitude,
             },
             Direction::Forward => Self {
-                x: self.x + other.magnitude,
-                y: self.y + self.aim * other.magnitude,
+                x: self.x + instruction.magnitude,
+                y: self.y + self.aim * instruction.magnitude,
                 aim: self.aim,
             },
         }
@@ -121,7 +117,7 @@ fn d02p2(input: &str) -> i32 {
     let p = input
         .lines()
         .map(Instruction::from)
-        .fold(Tuple::new(), |acc, instr| acc + instr);
+        .fold(State::new(), |state, instruction| state.next(instruction));
 
     p.x * p.y
 }
