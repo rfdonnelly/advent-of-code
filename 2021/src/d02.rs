@@ -8,22 +8,49 @@ pub fn run() {
     println!("d02p2: {}", d02p2(&input));
 }
 
+enum Direction {
+    Forward,
+    Down,
+    Up,
+}
+
+impl From<&str> for Direction {
+    fn from(s: &str) -> Self {
+        match s {
+            "forward" => Self::Forward,
+            "down" => Self::Down,
+            "up" => Self::Up,
+            _ => panic!(),
+        }
+    }
+}
+
+struct Instruction {
+    direction: Direction,
+    magnitude: i32,
+}
+
+impl From<&str> for Instruction {
+    fn from(s: &str) -> Self {
+        let mut splits = s.split(" ");
+        Self {
+            direction: Direction::from(splits.next().unwrap()),
+            magnitude: splits.next().unwrap().parse::<i32>().unwrap(),
+        }
+    }
+}
+
 struct Vector {
     x: i32,
     y: i32,
 }
 
-impl From<&str> for Vector {
-    fn from(s: &str) -> Self {
-        let mut splits = s.split(" ");
-        let direction = splits.next().unwrap();
-        let magnitude = splits.next().unwrap().parse::<i32>().unwrap();
-
-        match direction {
-            "forward" => Self { x: magnitude, y: 0 },
-            "down" => Self { x: 0, y: magnitude },
-            "up" => Self { x: 0, y: 0 - magnitude },
-            _ => panic!(),
+impl From<Instruction> for Vector {
+    fn from(instr: Instruction) -> Self {
+        match instr.direction {
+            Direction::Forward => Self { x: instr.magnitude, y: 0 },
+            Direction::Down => Self { x: 0, y: instr.magnitude },
+            Direction::Up => Self { x: 0, y: 0 - instr.magnitude },
         }
     }
 }
@@ -42,6 +69,7 @@ impl Add for Vector {
 fn d02p1(input: &str) -> i32 {
     let p = input
         .lines()
+        .map(Instruction::from)
         .map(Vector::from)
         .reduce(|a, b| a + b)
         .unwrap();
