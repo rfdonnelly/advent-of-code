@@ -48,9 +48,18 @@ struct Vector {
 impl From<Instruction> for Vector {
     fn from(instruction: Instruction) -> Self {
         match instruction.direction {
-            Direction::Forward => Self { x: instruction.magnitude, y: 0 },
-            Direction::Down => Self { x: 0, y: instruction.magnitude },
-            Direction::Up => Self { x: 0, y: 0 - instruction.magnitude },
+            Direction::Forward => Self {
+                x: instruction.magnitude,
+                y: 0,
+            },
+            Direction::Down => Self {
+                x: 0,
+                y: instruction.magnitude,
+            },
+            Direction::Up => Self {
+                x: 0,
+                y: 0 - instruction.magnitude,
+            },
         }
     }
 }
@@ -90,11 +99,7 @@ struct State {
 
 impl State {
     fn initial() -> Self {
-        Self {
-            x: 0,
-            y: 0,
-            aim: 0,
-        }
+        Self { x: 0, y: 0, aim: 0 }
     }
 
     fn next(self, instruction: Instruction) -> Self {
@@ -126,7 +131,9 @@ fn d02p2(input: &str) -> i32 {
     input
         .lines()
         .map(Instruction::from)
-        .fold(State::initial(), |state, instruction| state.next(instruction))
+        .fold(State::initial(), |state, instruction| {
+            state.next(instruction)
+        })
         .checksum()
 }
 
@@ -136,7 +143,7 @@ mod tests {
 
     #[test]
     fn d02p1() {
-        let input = indoc!{"
+        let input = indoc! {"
             forward 5
             down 5
             forward 8
@@ -152,7 +159,7 @@ mod tests {
 
     #[test]
     fn d02p2() {
-        let input = indoc!{"
+        let input = indoc! {"
             forward 5
             down 5
             forward 8
@@ -166,4 +173,3 @@ mod tests {
         assert_eq!(super::d02p2(&input), 1408487760);
     }
 }
-

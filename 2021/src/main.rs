@@ -11,12 +11,16 @@ fn main() {
 
 fn load_file<P>(path: P) -> String
 where
-    P: AsRef<Path>
+    P: AsRef<Path>,
 {
     fs::read_to_string(path).unwrap()
 }
 
 fn input(day: usize) -> String {
-    let path = PathBuf::from(format!("{}/inputs/{:02}.txt", env!("CARGO_MANIFEST_DIR"), day));
+    let path = PathBuf::from(format!(
+        "{}/inputs/{:02}.txt",
+        env!("CARGO_MANIFEST_DIR"),
+        day
+    ));
     load_file(path)
 }

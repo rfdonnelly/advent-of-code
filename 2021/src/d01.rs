@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn d01p1() {
-        let input = indoc!{"
+        let input = indoc! {"
             199
             200
             208
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn d01p2() {
-        let input = indoc!{"
+        let input = indoc! {"
             199
             200
             208
@@ -74,4 +74,3 @@ mod tests {
         assert_eq!(super::d01p2(&input), 1497);
     }
 }
-
