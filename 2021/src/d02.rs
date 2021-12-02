@@ -2,10 +2,12 @@ use crate::input;
 
 use std::ops::Add;
 
+const DAY: usize = 2;
+
 pub fn run() {
-    let input = input(2);
-    println!("d02p1: {}", d02p1(&input));
-    println!("d02p2: {}", d02p2(&input));
+    let input = input(DAY);
+    println!("d{:02}p1: {}", DAY, p1(&input));
+    println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
 enum Direction {
@@ -81,7 +83,7 @@ impl Vector {
     }
 }
 
-fn d02p1(input: &str) -> i32 {
+fn p1(input: &str) -> i32 {
     input
         .lines()
         .map(Instruction::from)
@@ -127,7 +129,7 @@ impl State {
     }
 }
 
-fn d02p2(input: &str) -> i32 {
+fn p2(input: &str) -> i32 {
     input
         .lines()
         .map(Instruction::from)
@@ -142,7 +144,7 @@ mod tests {
     use indoc::indoc;
 
     #[test]
-    fn d02p1() {
+    fn p1() {
         let input = indoc! {"
             forward 5
             down 5
@@ -151,14 +153,14 @@ mod tests {
             down 8
             forward 2
         "};
-        assert_eq!(super::d02p1(input), 150);
+        assert_eq!(super::p1(input), 150);
 
-        let input = super::input(2);
-        assert_eq!(super::d02p1(&input), 1690020);
+        let input = super::input(super::DAY);
+        assert_eq!(super::p1(&input), 1690020);
     }
 
     #[test]
-    fn d02p2() {
+    fn p2() {
         let input = indoc! {"
             forward 5
             down 5
@@ -167,9 +169,9 @@ mod tests {
             down 8
             forward 2
         "};
-        assert_eq!(super::d02p2(input), 900);
+        assert_eq!(super::p2(input), 900);
 
-        let input = super::input(2);
-        assert_eq!(super::d02p2(&input), 1408487760);
+        let input = super::input(super::DAY);
+        assert_eq!(super::p2(&input), 1408487760);
     }
 }

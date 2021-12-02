@@ -2,13 +2,15 @@ use crate::input;
 
 use itertools::Itertools;
 
+const DAY: usize = 1;
+
 pub fn run() {
-    let input = input(1);
-    println!("d01p1: {}", d01p1(&input));
-    println!("d01p2: {}", d01p2(&input));
+    let input = input(DAY);
+    println!("d{:02}p1: {}", DAY, p1(&input));
+    println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
-fn d01p1(input: &str) -> usize {
+fn p1(input: &str) -> usize {
     input
         .lines()
         .map(str::parse::<u32>)
@@ -18,7 +20,7 @@ fn d01p1(input: &str) -> usize {
         .count()
 }
 
-fn d01p2(input: &str) -> usize {
+fn p2(input: &str) -> usize {
     input
         .lines()
         .map(str::parse::<u32>)
@@ -35,7 +37,7 @@ mod tests {
     use indoc::indoc;
 
     #[test]
-    fn d01p1() {
+    fn p1() {
         let input = indoc! {"
             199
             200
@@ -48,14 +50,14 @@ mod tests {
             260
             263
         "};
-        assert_eq!(super::d01p1(input), 7);
+        assert_eq!(super::p1(input), 7);
 
-        let input = super::input(1);
-        assert_eq!(super::d01p1(&input), 1462);
+        let input = super::input(super::DAY);
+        assert_eq!(super::p1(&input), 1462);
     }
 
     #[test]
-    fn d01p2() {
+    fn p2() {
         let input = indoc! {"
             199
             200
@@ -68,9 +70,9 @@ mod tests {
             260
             263
         "};
-        assert_eq!(super::d01p2(input), 5);
+        assert_eq!(super::p2(input), 5);
 
-        let input = super::input(1);
-        assert_eq!(super::d01p2(&input), 1497);
+        let input = super::input(super::DAY);
+        assert_eq!(super::p2(&input), 1497);
     }
 }
