@@ -66,15 +66,20 @@ impl Add for Vector {
     }
 }
 
+impl Vector {
+    fn checksum(self) -> i32 {
+        self.x * self.y
+    }
+}
+
 fn d02p1(input: &str) -> i32 {
-    let p = input
+    input
         .lines()
         .map(Instruction::from)
         .map(Vector::from)
         .reduce(|a, b| a + b)
-        .unwrap();
-
-    p.x * p.y
+        .unwrap()
+        .checksum()
 }
 
 struct State {
@@ -111,15 +116,18 @@ impl State {
             },
         }
     }
+
+    fn checksum(self) -> i32 {
+        self.x * self.y
+    }
 }
 
 fn d02p2(input: &str) -> i32 {
-    let p = input
+    input
         .lines()
         .map(Instruction::from)
-        .fold(State::initial(), |state, instruction| state.next(instruction));
-
-    p.x * p.y
+        .fold(State::initial(), |state, instruction| state.next(instruction))
+        .checksum()
 }
 
 #[cfg(test)]
