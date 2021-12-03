@@ -10,9 +10,9 @@ pub fn run() {
     println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Value {
-    bits: Vec<i8>,
+    bits: Vec<i32>,
 }
 
 impl From<&str> for Value {
@@ -24,7 +24,7 @@ impl From<&str> for Value {
                 '1' => 1,
                 _ => panic!(),
             })
-            .collect::<Vec<i8>>();
+            .collect::<Vec<i32>>();
 
         Self { bits }
     }
@@ -38,19 +38,42 @@ impl Add for Value {
             .iter()
             .zip(other.bits.iter())
             .map(|(a, b)| a + b)
-            .collect::<Vec<i8>>();
+            .collect::<Vec<i32>>();
 
         Self { bits }
     }
 }
 
+#[derive(Clone, Copy)]
+enum Criteria {
+    MostCommon,
+    LeastCommon,
+}
+
+#[derive(Clone, Copy)]
+enum EqualResult {
+    Value(usize),
+    Panic,
+}
+
 impl Value {
-    fn to_usize(self, size: usize) -> usize {
+    fn to_usize(self, size: usize, criteria: Criteria, equal_result: EqualResult) -> usize {
         self.bits
             .iter()
             .map(|b| match b {
-                x if x > &0 => 1,
+                x if x > &0 => match criteria {
+                    Criteria::MostCommon => 1,
+                    Criteria::LeastCommon => 0,
+                },
+                x if x < &0 => match criteria {
+                    Criteria::MostCommon => 0,
+                    Criteria::LeastCommon => 1,
+                },
                 x if x < &0 => 0,
+                x if x == &0 => match equal_result {
+                    EqualResult::Value(x) => x,
+                    EqualResult::Panic => panic!(),
+                }
                 _ => panic!(),
             })
             .enumerate()
@@ -72,7 +95,7 @@ fn p1(input: &str) -> usize {
         .map(Value::from)
         .reduce(|a, b| a + b)
         .unwrap()
-        .to_usize(size);
+        .to_usize(size, Criteria::MostCommon, EqualResult::Panic);
 
     let mask = (1 << size) - 1;
     let epsilon_rate = !gamma_rate & mask;
