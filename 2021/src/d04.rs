@@ -26,7 +26,7 @@ impl Board {
             })
             .any(|x| x);
 
-        if any_row { return true; }
+        if any_row { return true }
 
         // Check columns
         let any_col = (0..5)
