@@ -17,28 +17,22 @@ struct Board {
 impl Board {
     fn is_win(&self) -> bool {
         // Check rows
-        let any_row = self.marks
+        let any_row = self
+            .marks
             .chunks(5)
-            .map(|row| {
-                row
-                    .iter()
-                    .all(|&x| x)
-            })
+            .map(|row| row.iter().all(|&x| x))
             .any(|x| x);
 
-        if any_row { return true }
+        if any_row {
+            return true;
+        }
 
         // Check columns
         let any_col = (0..5)
             .map(|col_idx| {
                 self.marks
                     .chunks(5)
-                    .map(|row| {
-                        row
-                            .iter()
-                            .nth(col_idx)
-                            .unwrap()
-                    })
+                    .map(|row| row.iter().nth(col_idx).unwrap())
                     .all(|&x| x)
             })
             .any(|x| x);
@@ -50,10 +44,7 @@ impl Board {
     ///
     /// Returns true if the board has bingo.
     fn mark(&mut self, value: u8) -> bool {
-        let find_result = self.values
-            .iter()
-            .enumerate()
-            .find(|(_i, &x)| x == value);
+        let find_result = self.values.iter().enumerate().find(|(_i, &x)| x == value);
 
         if let Some((i, _x)) = find_result {
             self.marks[i] = true;
@@ -63,15 +54,18 @@ impl Board {
     }
 
     fn sum_unmarked(&self) -> usize {
-        self.marks.iter()
+        self.marks
+            .iter()
             .zip(self.values.iter())
-            .filter_map(|(&marked, &value)| {
-                if !marked {
-                    Some(value as usize)
-                } else {
-                    None
-                }
-            })
+            .filter_map(
+                |(&marked, &value)| {
+                    if !marked {
+                        Some(value as usize)
+                    } else {
+                        None
+                    }
+                },
+            )
             .sum()
     }
 }
@@ -85,8 +79,7 @@ impl From<&[&str]> for Board {
 
         let values = lines
             .flat_map(|line| {
-                line
-                    .split(char::is_whitespace)
+                line.split(char::is_whitespace)
                     .map(str::parse::<u8>)
                     .filter_map(Result::ok)
             })
@@ -118,15 +111,16 @@ impl From<&str> for Bingo {
             .collect::<Vec<u8>>();
 
         let lines = lines.collect::<Vec<&str>>();
-        let boards = lines
-            .chunks(6)
-            .map(Board::from)
-            .collect::<Vec<Board>>();
+        let boards = lines.chunks(6).map(Board::from).collect::<Vec<Board>>();
 
         let num_boards = boards.len();
         let winners = vec![false; num_boards];
 
-        Self { draws, boards, winners }
+        Self {
+            draws,
+            boards,
+            winners,
+        }
     }
 }
 
@@ -166,13 +160,11 @@ impl Bingo {
 }
 
 fn p1(input: &str) -> usize {
-    Bingo::from(input)
-        .play(Until::FirstWin)
+    Bingo::from(input).play(Until::FirstWin)
 }
 
 fn p2(input: &str) -> usize {
-    Bingo::from(input)
-        .play(Until::LastWin)
+    Bingo::from(input).play(Until::LastWin)
 }
 
 #[cfg(test)]

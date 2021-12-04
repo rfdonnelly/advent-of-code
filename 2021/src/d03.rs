@@ -34,7 +34,8 @@ impl Add for Value {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        let bits = self.bits
+        let bits = self
+            .bits
             .iter()
             .zip(other.bits.iter())
             .map(|(a, b)| a + b)
@@ -73,7 +74,7 @@ impl Value {
                 x if x == &0 => match equal_result {
                     EqualResult::Value(x) => x,
                     EqualResult::Panic => panic!(),
-                }
+                },
                 _ => panic!(),
             })
             .enumerate()
@@ -98,13 +99,8 @@ impl Value {
     }
 }
 
-
 fn p1(input: &str) -> usize {
-    let size = input
-        .lines()
-        .next()
-        .unwrap()
-        .len();
+    let size = input.lines().next().unwrap().len();
 
     let gamma_rate = input
         .lines()
@@ -119,7 +115,12 @@ fn p1(input: &str) -> usize {
     gamma_rate * epsilon_rate
 }
 
-fn find_rating(values: &[usize], size: usize, criteria: Criteria, equal_result: EqualResult) -> usize {
+fn find_rating(
+    values: &[usize],
+    size: usize,
+    criteria: Criteria,
+    equal_result: EqualResult,
+) -> usize {
     let mut values = values.to_vec();
 
     for bit_idx in (0..size).rev() {
@@ -139,7 +140,9 @@ fn find_rating(values: &[usize], size: usize, criteria: Criteria, equal_result: 
             })
             .collect::<Vec<usize>>();
 
-        if values.len() == 1 { break; }
+        if values.len() == 1 {
+            break;
+        }
     }
 
     values[0]
@@ -150,11 +153,7 @@ fn get_bit(value: usize, bit_idx: usize) -> usize {
 }
 
 fn p2(input: &str) -> usize {
-    let size = input
-        .lines()
-        .next()
-        .unwrap()
-        .len();
+    let size = input.lines().next().unwrap().len();
 
     let values = input
         .lines()
@@ -162,20 +161,10 @@ fn p2(input: &str) -> usize {
         .collect::<Vec<usize>>();
 
     let oxygen_generator_rating =
-        find_rating(
-            &values,
-            size,
-            Criteria::MostCommon,
-            EqualResult::Value(1)
-        );
+        find_rating(&values, size, Criteria::MostCommon, EqualResult::Value(1));
 
     let co2_scrubber_rating =
-        find_rating(
-            &values,
-            size,
-            Criteria::LeastCommon,
-            EqualResult::Value(0)
-        );
+        find_rating(&values, size, Criteria::LeastCommon, EqualResult::Value(0));
 
     oxygen_generator_rating * co2_scrubber_rating
 }
@@ -208,7 +197,12 @@ mod tests {
 
     #[test]
     fn p2() {
-        assert_eq!(super::Value::from_usize(22, 5), super::Value { bits: vec![1, -1, 1, 1, -1] });
+        assert_eq!(
+            super::Value::from_usize(22, 5),
+            super::Value {
+                bits: vec![1, -1, 1, 1, -1]
+            }
+        );
 
         let input = indoc! {"
             00100
