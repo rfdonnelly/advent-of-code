@@ -92,9 +92,10 @@ impl From<&[&str]> for Board {
             })
             .collect::<Vec<u8>>();
 
-        let len = values.len();
+        let num_values = values.len();
+        let marks = vec![false; num_values];
 
-        Self { values, marks: vec![false; len] }
+        Self { values, marks }
     }
 }
 
@@ -102,6 +103,7 @@ impl From<&[&str]> for Board {
 struct Bingo {
     draws: Vec<u8>,
     boards: Vec<Board>,
+    winners: Vec<bool>,
 }
 
 impl From<&str> for Bingo {
@@ -121,21 +123,39 @@ impl From<&str> for Bingo {
             .map(Board::from)
             .collect::<Vec<Board>>();
 
-        Self { draws, boards }
+        let num_boards = boards.len();
+        let winners = vec![false; num_boards];
+
+        Self { draws, boards, winners }
     }
 }
 
+#[derive(Clone, Copy)]
+enum Until {
+    FirstWin,
+    LastWin,
+}
+
 impl Bingo {
-    fn play(&mut self) -> usize {
-        let (board_idx, draw) = self.play_til_win();
+    fn play(&mut self, until: Until) -> usize {
+        let (board_idx, draw) = self.determine_winner(until);
         let sum = self.boards[board_idx].sum_unmarked();
         (draw as usize) * sum
     }
 
-    fn play_til_win(&mut self) -> (usize, u8) {
+    fn determine_winner(&mut self, until: Until) -> (usize, u8) {
         for &draw in self.draws.iter() {
             for (board_idx, board) in self.boards.iter_mut().enumerate() {
                 if board.mark(draw) {
+                    self.winners[board_idx] = true;
+                }
+
+                let winner_determined = match until {
+                    Until::FirstWin => self.winners.iter().any(|&x| x),
+                    Until::LastWin => self.winners.iter().all(|&x| x),
+                };
+
+                if winner_determined {
                     return (board_idx, draw);
                 }
             }
@@ -146,13 +166,13 @@ impl Bingo {
 }
 
 fn p1(input: &str) -> usize {
-    let mut game = Bingo::from(input);
-
-    game.play()
+    Bingo::from(input)
+        .play(Until::FirstWin)
 }
 
 fn p2(input: &str) -> usize {
-    0
+    Bingo::from(input)
+        .play(Until::LastWin)
 }
 
 #[cfg(test)]
@@ -191,10 +211,29 @@ mod tests {
     #[test]
     fn p2() {
         let input = indoc! {"
+            7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
+
+            22 13 17 11  0
+             8  2 23  4 24
+            21  9 14 16  7
+             6 10  3 18  5
+             1 12 20 15 19
+
+             3 15  0  2 22
+             9 18 13 17  5
+            19  8  7 25 23
+            20 11 10 24  4
+            14 21 16 12  6
+
+            14 21 17 24  4
+            10 16 15  9 19
+            18  8 23 26 20
+            22 11 13  6  5
+             2  0 12  3  7
         "};
-        // assert_eq!(super::p2(input), 230);
+        assert_eq!(super::p2(input), 1924);
 
         let input = super::input(super::DAY);
-        // assert_eq!(super::p2(&input), 3277956);
+        assert_eq!(super::p2(&input), 4590);
     }
 }
