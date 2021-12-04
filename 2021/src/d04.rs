@@ -15,7 +15,7 @@ struct Board {
 }
 
 impl Board {
-    fn is_bingo(&self) -> bool {
+    fn is_win(&self) -> bool {
         // Check rows
         let any_row = self.marks
             .chunks(5)
@@ -59,7 +59,7 @@ impl Board {
             self.marks[i] = true;
         }
 
-        self.is_bingo()
+        self.is_win()
     }
 
     fn sum_unmarked(&self) -> usize {
