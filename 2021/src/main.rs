@@ -4,11 +4,13 @@ use std::path::{Path, PathBuf};
 mod d01;
 mod d02;
 mod d03;
+mod d04;
 
 fn main() {
     d01::run();
     d02::run();
     d03::run();
+    d04::run();
 }
 
 fn load_file<P>(path: P) -> String
