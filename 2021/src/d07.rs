@@ -8,27 +8,48 @@ pub fn run() {
     println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
+struct Positions(Vec<usize>);
+
+impl From<&str> for Positions {
+    fn from(s: &str) -> Self {
+        let mut positions = s
+            .trim()
+            .split(",")
+            .map(str::parse::<usize>)
+            .map(Result::unwrap)
+            .collect::<Vec<usize>>();
+
+        positions.sort();
+
+        Self(positions)
+    }
+}
+
+impl Positions {
+    fn cost<F>(&self, cost_fn: F) -> usize
+    where
+        F: FnMut(&usize) -> usize
+    {
+        self.0
+            .iter()
+            .map(cost_fn)
+            .sum()
+    }
+
+    fn median(&self) -> usize {
+        let index = self.0.len() / 2;
+        self.0[index]
+    }
+}
+
 fn p1_cost(a: usize, b: usize) -> usize {
     ((a as i32) - (b as i32)).abs() as usize
 }
 
 fn p1(input: &str) -> usize {
-    let mut positions = input
-        .trim()
-        .split(",")
-        .map(str::parse::<usize>)
-        .map(Result::unwrap)
-        .collect::<Vec<usize>>();
-
-    positions.sort();
-
-    let median = positions[positions.len() / 2];
-    let cost_fn = |&position| { p1_cost(position, median) };
-
-    positions
-        .iter()
-        .map(cost_fn)
-        .sum()
+    let positions = Positions::from(input);
+    let median = positions.median();
+    positions.cost(|&pos| p1_cost(pos, median))
 }
 
 fn p2(input: &str) -> usize {
