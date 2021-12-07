@@ -10,7 +10,7 @@ pub fn run() {
 
 #[derive(Debug)]
 struct State {
-    fish: Vec<usize>,
+    fish: [usize; 9],
 }
 
 impl From<&str> for State {
@@ -20,7 +20,10 @@ impl From<&str> for State {
             .split(",")
             .map(str::parse::<usize>)
             .filter_map(Result::ok)
-            .collect::<Vec<usize>>();
+            .fold([0; 9], |mut acc, age| {
+                acc[age] += 1;
+                acc
+            });
 
         Self { fish }
     }
@@ -28,22 +31,14 @@ impl From<&str> for State {
 
 impl State {
     fn next(mut self) -> Self {
-        let mut new = 0;
-
-        for f in self.fish.iter_mut() {
-            if *f == 0 {
-                *f = 6;
-                new += 1;
-            } else {
-                *f -= 1;
-            }
-        }
-
-        for _ in 0..new {
-            self.fish.push(8);
-        }
-
+        let zero = self.fish[0];
+        self.fish.rotate_left(1);
+        self.fish[6] += zero;
         self
+    }
+
+    fn count_fish(&self) -> usize {
+        self.fish.iter().sum()
     }
 }
 
@@ -54,7 +49,7 @@ fn simulate(initial_state: State, days: usize) -> usize {
         state = state.next();
     }
 
-    state.fish.len()
+    state.count_fish()
 }
 
 fn p1(input: &str) -> usize {
@@ -63,7 +58,8 @@ fn p1(input: &str) -> usize {
 }
 
 fn p2(input: &str) -> usize {
-    0
+    let initial_state = State::from(input);
+    simulate(initial_state, 256)
 }
 
 #[cfg(test)]
@@ -83,11 +79,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 12);
+        assert_eq!(super::p2(INPUT), 26984457539);
 
         let input = super::input(super::DAY);
-        assert_eq!(super::p2(&input), 20196);
+        assert_eq!(super::p2(&input), 1631647919273);
     }
 }
