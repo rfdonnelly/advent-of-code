@@ -48,12 +48,25 @@ fn p1_cost(a: usize, b: usize) -> usize {
 
 fn p1(input: &str) -> usize {
     let positions = Positions::from(input);
-    let median = positions.median();
-    positions.cost(|&pos| p1_cost(pos, median))
+    let to = positions.median();
+    positions.cost(|&from| p1_cost(from, to))
+}
+
+fn p2_cost(a: usize, b: usize) -> usize {
+    let diff = p1_cost(a, b);
+    (diff * (diff + 1)) / 2
 }
 
 fn p2(input: &str) -> usize {
-    todo!()
+    let positions = Positions::from(input);
+
+    let min = *positions.0.first().unwrap();
+    let max = *positions.0.last().unwrap();
+
+    (min..=max)
+        .map(|to| positions.cost(|&from| p2_cost(from, to)))
+        .min()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -73,11 +86,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 26984457539);
+        assert_eq!(super::p2(INPUT), 168);
 
         let input = super::input(super::DAY);
-        assert_eq!(super::p2(&input), 1631647919273);
+        assert_eq!(super::p2(&input), 97164301);
     }
 }
