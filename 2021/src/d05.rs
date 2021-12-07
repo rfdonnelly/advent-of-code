@@ -8,7 +8,7 @@ pub fn run() {
     println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 struct Point {
     x: usize,
     y: usize,
@@ -96,15 +96,22 @@ impl Line {
                     .collect()
             }
             Orientation::Diagonal => {
-                let x_diff = x_max - x_min;
-                let y_diff = y_max - y_min;
-                assert_eq!(x_diff, y_diff);
-                (0..=x_diff)
-                    .map(|i| {
-                        let x = x_min + i;
-                        let y = y_min + i;
-                        Point { x, y }
-                    })
+                let x_range: Vec<usize> =
+                    if self.p0.x < self.p1.x {
+                        (x_min..=x_max).collect()
+                    } else {
+                        (x_min..=x_max).rev().collect()
+                    };
+
+                let y_range: Vec<usize> =
+                    if self.p0.y < self.p1.y {
+                        (y_min..=y_max).collect()
+                    } else {
+                        (y_min..=y_max).rev().collect()
+                    };
+
+                x_range.iter().zip(y_range.iter())
+                    .map(|(&x, &y)| Point { x, y })
                     .collect()
             }
         }
@@ -136,6 +143,23 @@ impl Board {
                 cells
             })
             .iter()
+            .filter(|&&x| x >= 2)
+            .count()
+    }
+
+    fn count_overlaps(&self) -> usize {
+        let cells = vec![0; self.rows * self.cols];
+
+        let cells = self.lines
+            .iter()
+            .flat_map(Line::to_points)
+            .fold(cells, |mut cells, p| {
+                let index = self.point_to_index(&p);
+                cells[index] += 1;
+                cells
+            });
+
+        cells.iter()
             .filter(|&&x| x >= 2)
             .count()
     }
@@ -171,7 +195,8 @@ fn p1(input: &str) -> usize {
 }
 
 fn p2(input: &str) -> usize {
-    0
+    let board = Board::from(input);
+    board.count_overlaps()
 }
 
 #[cfg(test)]
@@ -200,11 +225,23 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 1924);
+        let points = super::Line::from("1,1 -> 3,3").to_points();
+        assert_eq!(points, vec![
+                   super::Point { x: 1, y: 1 },
+                   super::Point { x: 2, y: 2 },
+                   super::Point { x: 3, y: 3 },
+        ]);
+        let points = super::Line::from("9,7 -> 7,9").to_points();
+        assert_eq!(points, vec![
+                   super::Point { x: 9, y: 7 },
+                   super::Point { x: 8, y: 8 },
+                   super::Point { x: 7, y: 9 },
+        ]);
+
+        assert_eq!(super::p2(INPUT), 12);
 
         let input = super::input(super::DAY);
-        assert_eq!(super::p2(&input), 4590);
+        assert_eq!(super::p2(&input), 20196);
     }
 }
