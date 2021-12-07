@@ -47,13 +47,19 @@ impl State {
     }
 }
 
-fn p1(input: &str) -> usize {
-    let mut state = State::from(input);
-    for _ in 0..80 {
+fn simulate(initial_state: State, days: usize) -> usize {
+    let mut state = initial_state;
+
+    for _ in 0..days {
         state = state.next();
     }
 
     state.fish.len()
+}
+
+fn p1(input: &str) -> usize {
+    let initial_state = State::from(input);
+    simulate(initial_state, 80)
 }
 
 fn p2(input: &str) -> usize {
