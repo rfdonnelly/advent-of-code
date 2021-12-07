@@ -58,42 +58,96 @@ impl From<&str> for Line {
     }
 }
 
-#[derive(Clone, Debug)]
-struct Board {
-    rows: usize,
-    cols: usize,
-    cells: Vec<usize>,
+#[derive(PartialEq)]
+enum Orientation {
+    Horizontal,
+    Vertical,
+    Diagonal,
 }
 
-impl Board {
-    fn mark_line(&mut self, line: &Line) {
-        // Assumes lines are horizontal or vertical (i.e. not diagonal).
-        let x_min = line.p0.x.min(line.p1.x);
-        let x_max = line.p0.x.max(line.p1.x);
-        let y_min = line.p0.y.min(line.p1.y);
-        let y_max = line.p0.y.max(line.p1.y);
-        for x in x_min..=x_max {
-            for y in y_min..=y_max {
-                self.mark_point(&Point {x, y});
-            }
+impl Line {
+    fn orientation(&self) -> Orientation {
+        if self.p0.x == self.p1.x {
+            Orientation::Vertical
+        } else if self.p0.y == self.p1.y {
+            Orientation::Horizontal
+        } else {
+            Orientation::Diagonal
         }
     }
 
-    fn mark_point(&mut self, p: &Point) {
-        let index = p.y * self.rows + p.x;
-        self.cells[index] += 1;
+    fn to_points(&self) -> Vec<Point> {
+        let x_min = self.p0.x.min(self.p1.x);
+        let x_max = self.p0.x.max(self.p1.x);
+        let y_min = self.p0.y.min(self.p1.y);
+        let y_max = self.p0.y.max(self.p1.y);
+
+        match self.orientation() {
+            Orientation::Vertical => {
+                let x = self.p0.x;
+                (y_min..=y_max)
+                    .map(|y| Point { x, y })
+                    .collect()
+            }
+            Orientation::Horizontal => {
+                let y = self.p0.y;
+                (x_min..=x_max)
+                    .map(|x| Point { x, y })
+                    .collect()
+            }
+            Orientation::Diagonal => {
+                let x_diff = x_max - x_min;
+                let y_diff = y_max - y_min;
+                assert_eq!(x_diff, y_diff);
+                (0..=x_diff)
+                    .map(|i| {
+                        let x = x_min + i;
+                        let y = y_min + i;
+                        Point { x, y }
+                    })
+                    .collect()
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+struct Board {
+    lines: Vec<Line>,
+    rows: usize,
+    cols: usize,
+}
+
+impl Board {
+    fn point_to_index(&self, p: &Point) -> usize {
+        p.y * self.rows + p.x
     }
 
-    fn count_atleast_two_overlaps(&self) -> usize {
-        self.cells
+    fn count_non_diagonal_overlaps(&self) -> usize {
+        let cells = vec![0; self.rows * self.cols];
+
+        self.lines
+            .iter()
+            .filter(|line| line.orientation() != Orientation::Diagonal)
+            .flat_map(Line::to_points)
+            .fold(cells, |mut cells, p| {
+                let index = self.point_to_index(&p);
+                cells[index] += 1;
+                cells
+            })
             .iter()
             .filter(|&&x| x >= 2)
             .count()
     }
 }
 
-impl From<&[Line]> for Board {
-    fn from(lines: &[Line]) -> Self {
+impl From<&str> for Board {
+    fn from(s: &str) -> Self {
+        let lines = s
+            .lines()
+            .map(Line::from)
+            .collect::<Vec<Line>>();
+
         let max = lines
             .iter()
             .flat_map(|line| [line.p0, line.p1])
@@ -106,30 +160,14 @@ impl From<&[Line]> for Board {
 
         let rows = max.y + 1;
         let cols = max.x + 1;
-        let cells = vec![0; rows * cols];
 
-        let mut board = Self { rows, cols, cells };
-        let lines = lines
-            .iter()
-            .filter(|line| {
-                line.p0.x == line.p1.x
-                || line.p0.y == line.p1.y
-            })
-            .for_each(|line| board.mark_line(line));
-
-        board
+        Self { lines, rows, cols }
     }
 }
 
 fn p1(input: &str) -> usize {
-    let lines = input
-        .lines()
-        .map(Line::from)
-        .collect::<Vec<Line>>();
-
-    let board = Board::from(lines.as_slice());
-
-    board.count_atleast_two_overlaps()
+    let board = Board::from(input);
+    board.count_non_diagonal_overlaps()
 }
 
 fn p2(input: &str) -> usize {
