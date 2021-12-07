@@ -43,23 +43,17 @@ impl State {
 }
 
 fn simulate(initial_state: State, days: usize) -> usize {
-    let mut state = initial_state;
-
-    for _ in 0..days {
-        state = state.next();
-    }
-
-    state.count_fish()
+    (0..days)
+        .fold(initial_state, |state, _| state.next())
+        .count_fish()
 }
 
 fn p1(input: &str) -> usize {
-    let initial_state = State::from(input);
-    simulate(initial_state, 80)
+    simulate(State::from(input), 80)
 }
 
 fn p2(input: &str) -> usize {
-    let initial_state = State::from(input);
-    simulate(initial_state, 256)
+    simulate(State::from(input), 256)
 }
 
 #[cfg(test)]
