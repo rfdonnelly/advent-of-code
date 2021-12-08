@@ -71,7 +71,7 @@ impl BitAnd for Segments {
 // 6               0, 6, 9
 // 7               8
 impl Segments {
-    fn classify(&self, one: Segments, four: Segments) -> usize {
+    fn decode(&self, one: Segments, four: Segments) -> usize {
         match self.active {
             2 => 1,
             3 => 7,
@@ -140,7 +140,7 @@ impl Entry {
 
         self.output
             .iter()
-            .map(|segments| segments.classify(*one, *four))
+            .map(|segments| segments.decode(*one, *four))
             .enumerate()
             .map(|(i, digit)| digit * 10_usize.pow(3 - i as u32))
             .sum()
