@@ -8,16 +8,29 @@ pub fn run() {
     println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
-#[derive(Debug, Clone, Copy)]
-struct Segments(u8);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Segments {
+    segments: u8,
+    active: u8,
+}
+
+impl Default for Segments {
+    fn default() -> Self {
+        Self {
+            segments: 0,
+            active: 0,
+        }
+    }
+}
 
 impl From<&str> for Segments {
     fn from(s: &str) -> Self {
         s
             .chars()
             .map(|c| c as u8 - 'a' as u8)
-            .fold(Self(0), |mut acc, index| {
-                acc.0 |= 1 << index;
+            .fold(Segments::default(), |mut acc, index| {
+                acc.segments |= 1 << index;
+                acc.active += 1;
                 acc
             })
     }
@@ -62,8 +75,8 @@ fn p1(input: &str) -> usize {
     entries
         .iter()
         .flat_map(|entry| entry.output.as_slice())
-        .map(Segments::active_segments)
-        .filter(|active_segments| [2, 4, 3, 7].iter().any(|x| x == active_segments))
+        .map(|segments| segments.active)
+        .filter(|active| [2, 4, 3, 7].iter().any(|x| x == active))
         .count()
 }
 
