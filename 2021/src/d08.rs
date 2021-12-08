@@ -11,12 +11,12 @@ pub fn run() {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct Segments {
+struct Pattern {
     segments: u8,
     active: u8,
 }
 
-impl Default for Segments {
+impl Default for Pattern {
     fn default() -> Self {
         Self {
             segments: 0,
@@ -25,12 +25,12 @@ impl Default for Segments {
     }
 }
 
-impl From<&str> for Segments {
+impl From<&str> for Pattern {
     fn from(s: &str) -> Self {
         s
             .chars()
             .map(|c| c as u8 - 'a' as u8)
-            .fold(Segments::default(), |mut acc, index| {
+            .fold(Pattern::default(), |mut acc, index| {
                 acc.segments |= 1 << index;
                 acc.active += 1;
                 acc
@@ -38,7 +38,7 @@ impl From<&str> for Segments {
     }
 }
 
-impl BitAnd for Segments {
+impl BitAnd for Pattern {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
@@ -70,8 +70,8 @@ impl BitAnd for Segments {
 // 5               2, 3, 5
 // 6               0, 6, 9
 // 7               8
-impl Segments {
-    fn decode(&self, one: Segments, four: Segments) -> usize {
+impl Pattern {
+    fn decode(&self, one: Pattern, four: Pattern) -> usize {
         match self.active {
             2 => 1,
             3 => 7,
@@ -104,8 +104,8 @@ impl Segments {
 
 #[derive(Debug)]
 struct Entry {
-    patterns: Vec<Segments>,
-    output: Vec<Segments>,
+    patterns: Vec<Pattern>,
+    output: Vec<Pattern>,
 }
 
 impl From<&str> for Entry {
@@ -115,8 +115,8 @@ impl From<&str> for Entry {
             .map(|half| {
                 half
                     .split(" ")
-                    .map(Segments::from)
-                    .collect::<Vec<Segments>>()
+                    .map(Pattern::from)
+                    .collect::<Vec<Pattern>>()
             });
 
         Self {
