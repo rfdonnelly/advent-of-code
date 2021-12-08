@@ -1,5 +1,7 @@
 use crate::input;
 
+use std::ops::BitAnd;
+
 const DAY: usize = 8;
 
 pub fn run() {
@@ -36,9 +38,67 @@ impl From<&str> for Segments {
     }
 }
 
+impl BitAnd for Segments {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        let segments = self.segments & rhs.segments;
+        let active = segments.count_ones() as u8;
+        Self {
+            segments,
+            active,
+        }
+    }
+}
+
+// digit active_segments
+// 0     6
+// 1     2
+// 2     5
+// 3     5
+// 4     4
+// 5     5
+// 6     6
+// 7     3
+// 8     7
+// 9     6
+//
+// active_segments possible_digits
+// 2               1
+// 3               7
+// 4               4
+// 5               2, 3, 5
+// 6               0, 6, 9
+// 7               8
 impl Segments {
-    fn active_segments(&self) -> usize {
-        self.0.count_ones() as usize
+    fn classify(&self, one: Segments, four: Segments) -> usize {
+        match self.active {
+            2 => 1,
+            3 => 7,
+            4 => 4,
+            5 => {
+                if *self & one == one {
+                    3
+                } else {
+                    match (*self & four).active {
+                        2 => 2,
+                        3 => 5,
+                        _ => unreachable!(),
+                    }
+                }
+            }
+            6 => {
+                if (*self & one).active == 1 {
+                    6
+                } else if *self & four == four {
+                    9
+                } else {
+                    0
+                }
+            }
+            7 => 8,
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -66,6 +126,27 @@ impl From<&str> for Entry {
     }
 }
 
+impl Entry {
+    fn output_value(&self) -> usize {
+        let one = self.patterns
+            .iter()
+            .find(|&&segments| segments.active == 2)
+            .unwrap();
+
+        let four = self.patterns
+            .iter()
+            .find(|&&segments| segments.active == 4)
+            .unwrap();
+
+        self.output
+            .iter()
+            .map(|segments| segments.classify(*one, *four))
+            .enumerate()
+            .map(|(i, digit)| digit * 10_usize.pow(3 - i as u32))
+            .sum()
+    }
+}
+
 fn p1(input: &str) -> usize {
     let entries = input
         .lines()
@@ -81,7 +162,15 @@ fn p1(input: &str) -> usize {
 }
 
 fn p2(input: &str) -> usize {
-    todo!()
+    let entries = input
+        .lines()
+        .map(Entry::from)
+        .collect::<Vec<Entry>>();
+
+    entries
+        .iter()
+        .map(Entry::output_value)
+        .sum()
 }
 
 #[cfg(test)]
@@ -110,11 +199,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 168);
+        assert_eq!(super::p2(INPUT), 61229);
 
         let input = super::input(super::DAY);
-        assert_eq!(super::p2(&input), 97164301);
+        assert_eq!(super::p2(&input), 1070188);
     }
 }
