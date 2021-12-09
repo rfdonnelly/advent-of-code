@@ -1,5 +1,7 @@
 use crate::input;
 
+use tap::Tap;
+
 const DAY: usize = 7;
 
 pub fn run() {
@@ -12,14 +14,13 @@ struct Positions(Vec<usize>);
 
 impl From<&str> for Positions {
     fn from(s: &str) -> Self {
-        let mut positions = s
+        let positions = s
             .trim()
             .split(",")
             .map(str::parse::<usize>)
             .map(Result::unwrap)
-            .collect::<Vec<usize>>();
-
-        positions.sort();
+            .collect::<Vec<usize>>()
+            .tap_mut(|vec| vec.sort());
 
         Self(positions)
     }
