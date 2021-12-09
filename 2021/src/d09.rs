@@ -40,19 +40,17 @@ impl From<&str> for Map {
 }
 
 impl Map {
-    fn local_minima(&self) -> Vec<u8> {
+    fn minima(&self) -> Vec<(usize, u8)> {
         self.values
             .iter()
             .enumerate()
-            .filter_map(|(i, _)| self.is_local_min(i))
-            .collect::<Vec<u8>>()
+            .filter(|(i, _v)| self.is_local_min(*i))
+            .map(|(i, v)| (i, *v))
+            .collect()
     }
 
-    /// Checks whether there is a local minimum at index
-    ///
-    /// Returns None if no local minimum.
-    /// Returns Some(v) where v is the value of the local minimum.
-    fn is_local_min(&self, index: usize) -> Option<u8> {
+    /// Returns true if local minimum exists at index
+    fn is_local_min(&self, index: usize) -> bool {
         let min_neighbor = self
             .neighbors(index)
             .iter()
@@ -61,11 +59,7 @@ impl Map {
             .unwrap()
             .1;
 
-        if self.values[index] < min_neighbor {
-            Some(self.values[index])
-        } else {
-            None
-        }
+        self.values[index] < min_neighbor
     }
 
     fn neighbors(&self, index: usize) -> [Option<(usize, u8)>; 4] {
@@ -104,12 +98,10 @@ impl Map {
 }
 
 fn p1(input: &str) -> usize {
-    let map = Map::from(input);
-
-    map
-        .local_minima()
+    Map::from(input)
+        .minima()
         .iter()
-        .map(|x| (x + 1) as usize)
+        .map(|(_i, v)| (v + 1) as usize)
         .sum()
 }
 
