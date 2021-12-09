@@ -1,5 +1,7 @@
 use crate::input;
 
+use std::collections::HashSet;
+
 const DAY: usize = 9;
 
 pub fn run() {
@@ -95,6 +97,34 @@ impl Map {
 
         [left, right, above, below]
     }
+
+    fn basin_size(&self, index: usize) -> usize {
+        let mut visited: HashSet<usize> = HashSet::new();
+
+        let mut to_visit = vec![index];
+
+        loop {
+            let index = to_visit.pop().unwrap();
+
+            visited.insert(index);
+
+            let mut neighbors = self
+                .neighbors(index)
+                .iter()
+                .filter_map(|x| x.as_ref())
+                .filter(|(i, v)| *i != index && *v < 9 && !visited.contains(i))
+                .map(|(i, _v)| *i)
+                .collect::<Vec<usize>>();
+
+            to_visit.append(&mut neighbors);
+
+            if to_visit.len() == 0 {
+                break;
+            }
+        }
+
+        visited.len()
+    }
 }
 
 fn p1(input: &str) -> usize {
@@ -106,7 +136,21 @@ fn p1(input: &str) -> usize {
 }
 
 fn p2(input: &str) -> usize {
-    todo!()
+    let map = Map::from(input);
+
+    let mut sizes = Map::from(input)
+        .minima()
+        .iter()
+        .map(|(i, _v)| map.basin_size(*i))
+        .collect::<Vec<usize>>();
+
+    sizes.sort();
+
+    sizes
+        .iter()
+        .rev()
+        .take(3)
+        .product()
 }
 
 #[cfg(test)]
@@ -132,11 +176,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 61229);
+        assert_eq!(super::p2(INPUT), 1134);
 
         let input = input(super::DAY);
-        assert_eq!(super::p2(&input), 1070188);
+        assert_eq!(super::p2(&input), 1269555);
     }
 }
