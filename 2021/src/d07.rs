@@ -1,6 +1,6 @@
 use crate::input;
 
-use tap::Tap;
+use tap::prelude::*;
 
 const DAY: usize = 7;
 

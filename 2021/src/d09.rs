@@ -1,7 +1,7 @@
 use crate::input;
 
 use std::collections::HashSet;
-use tap::Tap;
+use tap::prelude::*;
 
 const DAY: usize = 9;
 
