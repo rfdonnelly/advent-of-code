@@ -53,42 +53,51 @@ impl Map {
     /// Returns None if no local minimum.
     /// Returns Some(v) where v is the value of the local minimum.
     fn is_local_min(&self, index: usize) -> Option<u8> {
-        let min_neighbors = *self
+        let min_neighbor = self
             .neighbors(index)
             .iter()
-            .min()
-            .unwrap();
+            .filter_map(|x| x.as_ref())
+            .min_by_key(|(_i, v)| v)
+            .unwrap()
+            .1;
 
-        if self.values[index] < min_neighbors {
+        if self.values[index] < min_neighbor {
             Some(self.values[index])
         } else {
             None
         }
     }
 
-    fn neighbors(&self, index: usize) -> [u8; 4] {
+    fn neighbors(&self, index: usize) -> [Option<(usize, u8)>; 4] {
         let col_index = index % self.cols;
-        let at_left_edge = col_index == 0;
-        let at_right_edge = col_index == self.cols - 1;
 
+        let at_left_edge = col_index == 0;
         let left =
             if at_left_edge {
-                u8::MAX
+                None
             } else {
-                self.values[index - 1]
+                let index = index - 1;
+                Some((index, self.values[index]))
             };
+
+        let at_right_edge = col_index == self.cols - 1;
         let right =
             if at_right_edge {
-                u8::MAX
+                None
             } else {
-                self.values[index + 1]
+                let index = index + 1;
+                Some((index, self.values[index]))
             };
-        let above = *self.values
-            .get(index.wrapping_sub(self.cols))
-            .unwrap_or(&u8::MAX);
-        let below = *self.values
-            .get(index + self.cols)
-            .unwrap_or(&u8::MAX);
+
+        let above_index = index.wrapping_sub(self.cols);
+        let above = self.values
+            .get(above_index)
+            .map(|&v| (above_index, v));
+
+        let below_index = index + self.cols;
+        let below = self.values
+            .get(below_index)
+            .map(|&v| (below_index, v));
 
         [left, right, above, below]
     }
