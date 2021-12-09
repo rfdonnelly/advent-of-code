@@ -1,6 +1,7 @@
 use crate::input;
 
 use std::collections::HashSet;
+use tap::Tap;
 
 const DAY: usize = 9;
 
@@ -138,15 +139,12 @@ fn p1(input: &str) -> usize {
 fn p2(input: &str) -> usize {
     let map = Map::from(input);
 
-    let mut sizes = Map::from(input)
+    map
         .minima()
         .iter()
         .map(|(i, _v)| map.basin_size(*i))
-        .collect::<Vec<usize>>();
-
-    sizes.sort();
-
-    sizes
+        .collect::<Vec<usize>>()
+        .tap_mut(|sizes| sizes.sort())
         .iter()
         .rev()
         .take(3)
