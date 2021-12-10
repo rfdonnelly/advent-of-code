@@ -13,11 +13,16 @@ enum OpenClose {
     Close,
 }
 
+enum Result {
+    Error(usize),
+    Incomplete(String)
+}
+
 use OpenClose::*;
 
 /// Returns Some(score) if syntax error present
 /// Returns None if syntax error not present
-fn syntax_error_score(s: &str) -> Option<usize> {
+fn syntax_error_score(s: &str) -> Result {
     let sequence = s
         .chars()
         .map(|c| match c {
@@ -45,11 +50,11 @@ fn syntax_error_score(s: &str) -> Option<usize> {
                 }
             }
         } else {
-            return Some(char_score(c));
+            return Result::Error(p1_char_score(c));
         }
     }
 
-    None
+    Result::Incomplete(stack.iter().collect())
 }
 
 fn is_char_ok(curr: char, tail: Option<&char>) -> bool {
@@ -63,7 +68,7 @@ fn is_char_ok(curr: char, tail: Option<&char>) -> bool {
     }
 }
 
-fn char_score(c: char) -> usize {
+fn p1_char_score(c: char) -> usize {
     match c {
         ')' => 3,
         ']' => 57,
@@ -76,7 +81,10 @@ fn char_score(c: char) -> usize {
 fn p1(input: &str) -> usize {
     input
         .lines()
-        .filter_map(syntax_error_score)
+        .filter_map(|line| match syntax_error_score(line) {
+            Result::Error(x) => Some(x),
+            Result::Incomplete(_) => None,
+        })
         .sum()
 }
 
