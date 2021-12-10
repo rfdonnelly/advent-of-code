@@ -10,74 +10,103 @@ pub fn run() {
     println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
-enum OpenClose {
-    Open,
-    Close,
+#[derive(Debug, Copy, Clone)]
+struct Delim {
+    kind: DelimKind,
+    side: Side,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+enum DelimKind {
+    Paren,
+    Bracket,
+    Brace,
+    Angle,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+enum Side {
+    Left,
+    Right,
+}
+
+use DelimKind::*;
+use Side::*;
+
+impl From<char> for Delim {
+    fn from(c: char) -> Self {
+        match c {
+            '(' => Delim { kind: Paren, side: Left },
+            ')' => Delim { kind: Paren, side: Right },
+            '[' => Delim { kind: Bracket, side: Left },
+            ']' => Delim { kind: Bracket, side: Right },
+            '{' => Delim { kind: Brace, side: Left },
+            '}' => Delim { kind: Brace, side: Right },
+            '<' => Delim { kind: Angle, side: Left },
+            '>' => Delim { kind: Angle, side: Right },
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Delim {
+    fn is_match(&self, other: Option<&Delim>) -> bool {
+        if self.side == Left {
+            true
+        } else if let Some(other) = other {
+            self.kind == other.kind
+                && other.side == Left
+                && self.side == Right
+        } else {
+            unreachable!()
+        }
+    }
+
+    fn p1_score(&self) -> usize {
+        match self.kind {
+            Paren => 3,
+            Bracket => 57,
+            Brace => 1197,
+            Angle => 25137,
+        }
+    }
+
+    fn p2_score(&self) -> usize {
+        match self.kind {
+            Paren => 1,
+            Bracket => 2,
+            Brace => 3,
+            Angle => 4,
+        }
+    }
 }
 
 enum Result {
     Error(usize),
-    Incomplete(String)
+    Incomplete(Vec<Delim>)
 }
-
-use OpenClose::*;
 
 /// Returns Some(score) if syntax error present
 /// Returns None if syntax error not present
 fn syntax_error_score(s: &str) -> Result {
-    let sequence = s
+    let delims = s
         .chars()
-        .map(|c| match c {
-            '(' => (c, Open),
-            ')' => (c, Close),
-            '{' => (c, Open),
-            '}' => (c, Close),
-            '<' => (c, Open),
-            '>' => (c, Close),
-            '[' => (c, Open),
-            ']' => (c, Close),
-            _ => unreachable!(),
-        })
-        .collect::<Vec<(char, OpenClose)>>();
+        .map(Delim::from)
+        .collect::<Vec<Delim>>();
 
     let mut stack = vec![];
-    for (c, oc) in sequence {
-        if is_char_ok(c, stack.last()) {
-            match oc {
-                Open => {
-                    stack.push(c);
-                }
-                Close => {
-                    stack.pop();
-                }
+    for delim in delims {
+        if delim.is_match(stack.last()) {
+            match delim.side {
+                Left => { stack.push(delim); }
+                Right => { stack.pop(); }
             }
         } else {
-            return Result::Error(p1_char_score(c));
+            return Result::Error(delim.p1_score());
         }
     }
 
-    Result::Incomplete(stack.iter().collect())
-}
-
-fn is_char_ok(curr: char, tail: Option<&char>) -> bool {
-    match curr {
-        '(' | '[' | '{' | '<' => true,
-        ')' => tail == Some(&'('),
-        ']' => tail == Some(&'['),
-        '}' => tail == Some(&'{'),
-        '>' => tail == Some(&'<'),
-        _ => unreachable!(),
-    }
-}
-
-fn p1_char_score(c: char) -> usize {
-    match c {
-        ')' => 3,
-        ']' => 57,
-        '}' => 1197,
-        '>' => 25137,
-        _ => unreachable!(),
-    }
+    Result::Incomplete(stack)
 }
 
 fn p1(input: &str) -> usize {
@@ -90,22 +119,12 @@ fn p1(input: &str) -> usize {
         .sum()
 }
 
-fn completion_score(s: &str) -> usize {
-    s
-        .chars()
+fn completion_score(stack: &[Delim]) -> usize {
+    stack
+        .iter()
         .rev()
-        .map(p2_char_score)
-        .fold(0, |acc, char_score| acc * 5 + char_score)
-}
-
-fn p2_char_score(c: char) -> usize {
-    match c {
-        '(' => 1,
-        '[' => 2,
-        '{' => 3,
-        '<' => 4,
-        _ => unreachable!(),
-    }
+        .map(Delim::p2_score)
+        .fold(0, |total_score, delim_score| total_score * 5 + delim_score)
 }
 
 fn p2(input: &str) -> usize {
