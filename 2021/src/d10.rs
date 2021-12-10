@@ -1,5 +1,7 @@
 use crate::input;
 
+use tap::prelude::*;
+
 const DAY: usize = 10;
 
 pub fn run() {
@@ -88,8 +90,35 @@ fn p1(input: &str) -> usize {
         .sum()
 }
 
+fn completion_score(s: &str) -> usize {
+    s
+        .chars()
+        .rev()
+        .map(p2_char_score)
+        .fold(0, |acc, char_score| acc * 5 + char_score)
+}
+
+fn p2_char_score(c: char) -> usize {
+    match c {
+        '(' => 1,
+        '[' => 2,
+        '{' => 3,
+        '<' => 4,
+        _ => unreachable!(),
+    }
+}
+
 fn p2(input: &str) -> usize {
-    todo!()
+    input
+        .lines()
+        .filter_map(|line| match syntax_error_score(line) {
+            Result::Incomplete(x) => Some(x),
+            Result::Error(_) => None,
+        })
+        .map(|x| completion_score(&x))
+        .collect::<Vec<usize>>()
+        .tap_mut(|v| v.sort())
+        .pipe(|v| v[v.len() / 2])
 }
 
 #[cfg(test)]
@@ -120,11 +149,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), todo!());
+        assert_eq!(super::p2(INPUT), 288957);
 
         let input = input(DAY);
-        assert_eq!(super::p2(&input), todo!());
+        assert_eq!(super::p2(&input), 2165057169);
     }
 }
