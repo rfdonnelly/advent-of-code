@@ -81,6 +81,19 @@ impl Grid {
         self.flashes
     }
 
+    fn step_until(&mut self, flashes_in_step: usize) -> usize {
+        for step in 1.. {
+            let flashes = self.flashes;
+            self.step();
+            let flashes_diff = self.flashes - flashes;
+            if flashes_diff == flashes_in_step {
+                return step;
+            }
+        }
+
+        unreachable!()
+    }
+
     fn step(&mut self) {
         for y in 0..self.ys {
             for x in 0..self.xs {
@@ -151,7 +164,7 @@ fn p1(input: &str) -> usize {
 }
 
 fn p2(input: &str) -> usize {
-    todo!()
+    Grid::from(input).step_until(100)
 }
 
 #[cfg(test)]
@@ -182,11 +195,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 288957);
+        assert_eq!(super::p2(INPUT), 195);
 
-        let input = input(DAY);
-        assert_eq!(super::p2(&input), 2165057169);
+        // let input = input(DAY);
+        // assert_eq!(super::p2(&input), 2165057169);
     }
 }
