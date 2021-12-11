@@ -1,7 +1,5 @@
 use crate::input;
 
-use tap::prelude::*;
-
 use std::fmt;
 
 const DAY: usize = 11;
@@ -74,6 +72,15 @@ impl fmt::Debug for Grid {
 }
 
 impl Grid {
+    fn step_for(&mut self, steps: usize) -> usize {
+        (0..steps)
+            .for_each(|_| {
+                self.step()
+            });
+
+        self.flashes
+    }
+
     fn step(&mut self) {
         for y in 0..self.ys {
             for x in 0..self.xs {
@@ -140,9 +147,7 @@ impl Grid {
 }
 
 fn p1(input: &str) -> usize {
-    Grid::from(input)
-        .tap_mut(|grid| (0..100).for_each(|_| grid.step()))
-        .pipe(|grid| grid.flashes)
+    Grid::from(input).step_for(100)
 }
 
 fn p2(input: &str) -> usize {
