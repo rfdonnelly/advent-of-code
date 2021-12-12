@@ -198,7 +198,7 @@ mod tests {
     fn p2() {
         assert_eq!(super::p2(INPUT), 195);
 
-        // let input = input(DAY);
-        // assert_eq!(super::p2(&input), 2165057169);
+        let input = input(DAY);
+        assert_eq!(super::p2(&input), 505);
     }
 }
