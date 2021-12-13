@@ -108,7 +108,12 @@ fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, no
     if let Some(neighbors) = neighbors {
         for neighbor in neighbors {
             if matches!(node, Node::Small(_, _)) {
-                if path.contains(&node) {
+                let occurrences = path
+                    .iter()
+                    .filter(|&&n| n == node)
+                    .count();
+
+                if occurrences >= 1 {
                     return;
                 }
             }
@@ -166,7 +171,8 @@ mod tests {
     #[test]
     #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT1), 195);
+        assert_eq!(super::p1(INPUT1), 36);
+        assert_eq!(super::p1(INPUT2), 103);
 
         // let input = input(DAY);
         // assert_eq!(super::p2(&input), 2165057169);
