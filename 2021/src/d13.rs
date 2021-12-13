@@ -1,17 +1,13 @@
 use crate::input;
 
-use tap::prelude::*;
-
-use std::collections::HashMap;
 use std::collections::HashSet;
-use std::fmt;
 
 const DAY: usize = 13;
 
 pub fn run() {
     let input = input(DAY);
     println!("d{:02}p1: {}", DAY, p1(&input));
-    println!("d{:02}p2: {}", DAY, p2(&input));
+    println!("d{:02}p2:\n{}", DAY, p2(&input));
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -112,8 +108,36 @@ fn p1(input: &str) -> usize {
     fold_many(&input.points, *fold).len()
 }
 
-fn p2(input: &str) -> usize {
-    0
+fn p2(input: &str) -> String {
+    let input = Input::from(input);
+
+    let points = input.folds
+        .iter()
+        .fold(input.points, |grid, &fold| {
+            fold_many(&grid, fold)
+        });
+    let grid = points
+        .iter()
+        .fold(HashSet::new(), |mut grid, point| {
+            grid.insert(point);
+            grid
+        });
+
+    let width = grid.iter().map(|p| p.x).max().unwrap() + 1;
+    let height = grid.iter().map(|p| p.y).max().unwrap() + 1;
+    let mut s = String::with_capacity(width as usize * height as usize + height as usize);
+    for y in 0..height {
+        for x in 0..width {
+            if grid.contains(&Point {x, y}) {
+                s += "#";
+            } else {
+                s += ".";
+            }
+        }
+        s += "\n";
+    }
+
+    s
 }
 
 #[cfg(test)]
@@ -155,11 +179,23 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 36);
+        assert_eq!(super::p2(INPUT), indoc! {"
+            #####
+            #...#
+            #...#
+            #...#
+            #####
+        "});
 
         let input = input(DAY);
-        assert_eq!(super::p2(&input), 104834);
+        assert_eq!(super::p2(&input), indoc! {"
+            ####.###..#..#.####.#....###..###..###.
+            #....#..#.#..#.#....#....#..#.#..#.#..#
+            ###..#..#.#..#.###..#....#..#.###..#..#
+            #....###..#..#.#....#....###..#..#.###.
+            #....#....#..#.#....#....#....#..#.#.#.
+            ####.#.....##..####.####.#....###..#..#
+        "});
     }
 }
