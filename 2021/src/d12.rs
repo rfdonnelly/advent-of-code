@@ -21,6 +21,12 @@ enum Node {
     Small(char, Option<char>),
 }
 
+impl Node {
+    fn is_small(&self) -> bool {
+        matches!(self, Node::Small(_, _))
+    }
+}
+
 impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -89,12 +95,31 @@ fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut valid_paths: Vec<Vec<Node>> = Vec::new();
-    visit_node(&graph, &vec![], &mut valid_paths, Node::Start);
+    visit_node(&graph, &vec![], &mut valid_paths, Node::Start, SmallCaveVisitPolicy::Once);
 
     valid_paths.len()
 }
 
-fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, node: Node) {
+fn contains_two_of_same_small(path: &[Node]) -> bool {
+    path
+        .iter()
+        .filter(|node| node.is_small())
+        .map(|node| {
+            path
+                .iter()
+                .filter(|&n| n == node)
+                .count()
+        })
+        .any(|count| count == 2)
+}
+
+#[derive(Copy, Clone)]
+enum SmallCaveVisitPolicy {
+    Once,
+    SingleTwice,
+}
+
+fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, node: Node, policy: SmallCaveVisitPolicy) {
     if matches!(node, Node::End) {
         let path = path
             .to_vec()
@@ -107,13 +132,27 @@ fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, no
 
     if let Some(neighbors) = neighbors {
         for neighbor in neighbors {
-            if matches!(node, Node::Small(_, _)) {
+            if node.is_small() {
                 let occurrences = path
                     .iter()
                     .filter(|&&n| n == node)
                     .count();
 
-                if occurrences >= 1 {
+                let max_occurences =
+                    match policy {
+                        SmallCaveVisitPolicy::Once => {
+                            1
+                        }
+                        SmallCaveVisitPolicy::SingleTwice => {
+                            if contains_two_of_same_small(path) {
+                                1
+                            } else {
+                                2
+                            }
+                        }
+                    };
+
+                if occurrences >= max_occurences {
                     return;
                 }
             }
@@ -121,13 +160,18 @@ fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, no
             let path = path
                 .to_vec()
                 .tap_mut(|v| v.push(node));
-            visit_node(graph, &path, valid_paths, *neighbor);
+            visit_node(graph, &path, valid_paths, *neighbor, policy);
         }
     }
 }
 
 fn p2(input: &str) -> usize {
-    todo!()
+    let graph = Graph::from(input);
+
+    let mut valid_paths: Vec<Vec<Node>> = Vec::new();
+    visit_node(&graph, &vec![], &mut valid_paths, Node::Start, SmallCaveVisitPolicy::SingleTwice);
+
+    valid_paths.len()
 }
 
 #[cfg(test)]
@@ -169,12 +213,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        assert_eq!(super::p1(INPUT1), 36);
-        assert_eq!(super::p1(INPUT2), 103);
+        assert_eq!(super::p2(INPUT1), 36);
+        assert_eq!(super::p2(INPUT2), 103);
 
-        // let input = input(DAY);
-        // assert_eq!(super::p2(&input), 2165057169);
+        let input = input(DAY);
+        assert_eq!(super::p2(&input), 104834);
     }
 }
