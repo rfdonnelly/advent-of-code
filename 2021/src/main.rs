@@ -13,6 +13,7 @@ mod d09;
 mod d10;
 mod d11;
 mod d12;
+mod d13;
 
 fn main() {
     d01::run();
@@ -27,6 +28,7 @@ fn main() {
     d10::run();
     d11::run();
     d12::run();
+    d13::run();
 }
 
 fn load_file<P>(path: P) -> String
