@@ -106,6 +106,8 @@ fn p1(input: &str) -> usize {
     valid_paths.len()
 }
 
+// NOTE: Tried implementing this as a fold into a HashMap.  It took more than took twice as long
+// increasing the debug build runtime from 3s to 7s.
 fn contains_two_of_same_small(path: &[Node]) -> bool {
     path.iter()
         .filter(|node| node.is_small())
