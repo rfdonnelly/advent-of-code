@@ -3,6 +3,7 @@ use crate::input;
 use tap::prelude::*;
 
 use std::collections::HashMap;
+use std::fmt;
 
 const DAY: usize = 12;
 
@@ -12,12 +13,25 @@ pub fn run() {
     println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum Node {
     Start,
     End,
     Big(char, Option<char>),
     Small(char, Option<char>),
+}
+
+impl fmt::Debug for Node {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Node::Start => write!(f, "start"),
+            Node::End => write!(f, "end"),
+            Node::Big(c1, Some(c2)) => write!(f, "{}{}", c1, c2),
+            Node::Small(c1, Some(c2)) => write!(f, "{}{}", c1, c2),
+            Node::Big(c, None) => write!(f, "{}", c),
+            Node::Small(c, None) => write!(f, "{}", c),
+        }
+    }
 }
 
 impl From<&str> for Node {
@@ -60,7 +74,9 @@ impl From<&str> for Graph {
                     .pipe(|(a, b)| (Node::from(a), Node::from(b)))
             })
             .fold(Graph::new(), |mut graph, (a, b)| {
-                graph.nodes.entry(a).or_insert(Vec::new()).push(b);
+                if !matches!(b, Node::Start) && !matches!(a, Node::End) {
+                    graph.nodes.entry(a).or_insert(Vec::new()).push(b);
+                }
                 if !matches!(a, Node::Start) && !matches!(b, Node::End) {
                     graph.nodes.entry(b).or_insert(Vec::new()).push(a);
                 }
@@ -70,7 +86,39 @@ impl From<&str> for Graph {
 }
 
 fn p1(input: &str) -> usize {
-    todo!()
+    let graph = Graph::from(input);
+
+    let mut valid_paths: Vec<Vec<Node>> = Vec::new();
+    visit_node(&graph, &vec![], &mut valid_paths, Node::Start);
+
+    valid_paths.len()
+}
+
+fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, node: Node) {
+    if matches!(node, Node::End) {
+        let path = path
+            .to_vec()
+            .tap_mut(|v| v.push(node));
+        valid_paths.push(path);
+        return;
+    }
+
+    let neighbors = graph.nodes.get(&node);
+
+    if let Some(neighbors) = neighbors {
+        for neighbor in neighbors {
+            if matches!(node, Node::Small(_, _)) {
+                if path.contains(&node) {
+                    return;
+                }
+            }
+
+            let path = path
+                .to_vec()
+                .tap_mut(|v| v.push(node));
+            visit_node(graph, &path, valid_paths, *neighbor);
+        }
+    }
 }
 
 fn p2(input: &str) -> usize {
@@ -83,7 +131,7 @@ mod tests {
 
     use indoc::indoc;
 
-    const INPUT: &str = indoc! {"
+    const INPUT1: &str = indoc! {"
         start-A
         start-b
         A-c
@@ -93,18 +141,32 @@ mod tests {
         b-end
     "};
 
+    const INPUT2: &str = indoc! {"
+        dc-end
+        HN-start
+        start-kj
+        dc-start
+        dc-HN
+        LN-dc
+        HN-end
+        kj-sa
+        kj-HN
+        kj-dc
+    "};
+
     #[test]
     fn p1() {
-        dbg!(Graph::from(INPUT));
-        assert_eq!(super::p1(INPUT), 1656);
+        assert_eq!(super::p1(INPUT1), 10);
+        assert_eq!(super::p1(INPUT2), 19);
 
         let input = input(DAY);
-        assert_eq!(super::p1(&input), 1747);
+        assert_eq!(super::p1(&input), 3887);
     }
 
     #[test]
+    #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 195);
+        assert_eq!(super::p2(INPUT1), 195);
 
         // let input = input(DAY);
         // assert_eq!(super::p2(&input), 2165057169);
