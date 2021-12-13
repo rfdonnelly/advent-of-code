@@ -29,12 +29,9 @@ impl From<&str> for Positions {
 impl Positions {
     fn cost<F>(&self, cost_fn: F) -> usize
     where
-        F: FnMut(&usize) -> usize
+        F: FnMut(&usize) -> usize,
     {
-        self.0
-            .iter()
-            .map(cost_fn)
-            .sum()
+        self.0.iter().map(cost_fn).sum()
     }
 
     fn median(&self) -> usize {

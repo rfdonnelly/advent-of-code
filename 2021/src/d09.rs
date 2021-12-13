@@ -19,23 +19,11 @@ struct Map {
 
 impl From<&str> for Map {
     fn from(s: &str) -> Self {
-        let cols = s
-            .lines()
-            .next()
-            .unwrap()
-            .len();
+        let cols = s.lines().next().unwrap().len();
 
         let values = s
             .lines()
-            .flat_map(|line| {
-                line
-                    .chars()
-                    .map(|c| {
-                        c
-                            .to_digit(10)
-                            .unwrap() as u8
-                    })
-            })
+            .flat_map(|line| line.chars().map(|c| c.to_digit(10).unwrap() as u8))
             .collect::<Vec<u8>>();
 
         Self { cols, values }
@@ -69,32 +57,26 @@ impl Map {
         let col_index = index % self.cols;
 
         let at_left_edge = col_index == 0;
-        let left =
-            if at_left_edge {
-                None
-            } else {
-                let index = index - 1;
-                Some((index, self.values[index]))
-            };
+        let left = if at_left_edge {
+            None
+        } else {
+            let index = index - 1;
+            Some((index, self.values[index]))
+        };
 
         let at_right_edge = col_index == self.cols - 1;
-        let right =
-            if at_right_edge {
-                None
-            } else {
-                let index = index + 1;
-                Some((index, self.values[index]))
-            };
+        let right = if at_right_edge {
+            None
+        } else {
+            let index = index + 1;
+            Some((index, self.values[index]))
+        };
 
         let above_index = index.wrapping_sub(self.cols);
-        let above = self.values
-            .get(above_index)
-            .map(|&v| (above_index, v));
+        let above = self.values.get(above_index).map(|&v| (above_index, v));
 
         let below_index = index + self.cols;
-        let below = self.values
-            .get(below_index)
-            .map(|&v| (below_index, v));
+        let below = self.values.get(below_index).map(|&v| (below_index, v));
 
         [left, right, above, below]
     }
@@ -139,8 +121,7 @@ fn p1(input: &str) -> usize {
 fn p2(input: &str) -> usize {
     let map = Map::from(input);
 
-    map
-        .minima()
+    map.minima()
         .iter()
         .map(|(i, _v)| map.basin_size(*i))
         .collect::<Vec<usize>>()

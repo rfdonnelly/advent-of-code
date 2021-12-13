@@ -36,14 +36,38 @@ use Side::*;
 impl From<char> for Delim {
     fn from(c: char) -> Self {
         match c {
-            '(' => Delim { kind: Paren, side: Left },
-            ')' => Delim { kind: Paren, side: Right },
-            '[' => Delim { kind: Bracket, side: Left },
-            ']' => Delim { kind: Bracket, side: Right },
-            '{' => Delim { kind: Brace, side: Left },
-            '}' => Delim { kind: Brace, side: Right },
-            '<' => Delim { kind: Angle, side: Left },
-            '>' => Delim { kind: Angle, side: Right },
+            '(' => Delim {
+                kind: Paren,
+                side: Left,
+            },
+            ')' => Delim {
+                kind: Paren,
+                side: Right,
+            },
+            '[' => Delim {
+                kind: Bracket,
+                side: Left,
+            },
+            ']' => Delim {
+                kind: Bracket,
+                side: Right,
+            },
+            '{' => Delim {
+                kind: Brace,
+                side: Left,
+            },
+            '}' => Delim {
+                kind: Brace,
+                side: Right,
+            },
+            '<' => Delim {
+                kind: Angle,
+                side: Left,
+            },
+            '>' => Delim {
+                kind: Angle,
+                side: Right,
+            },
             _ => unreachable!(),
         }
     }
@@ -54,9 +78,7 @@ impl Delim {
         if self.side == Left {
             true
         } else if let Some(other) = other {
-            self.kind == other.kind
-                && other.side == Left
-                && self.side == Right
+            self.kind == other.kind && other.side == Left && self.side == Right
         } else {
             unreachable!()
         }
@@ -83,23 +105,24 @@ impl Delim {
 
 enum Result {
     Error(usize),
-    Incomplete(Vec<Delim>)
+    Incomplete(Vec<Delim>),
 }
 
 /// Returns Some(score) if syntax error present
 /// Returns None if syntax error not present
 fn syntax_error_score(s: &str) -> Result {
-    let delims = s
-        .chars()
-        .map(Delim::from)
-        .collect::<Vec<Delim>>();
+    let delims = s.chars().map(Delim::from).collect::<Vec<Delim>>();
 
     let mut stack = vec![];
     for delim in delims {
         if delim.is_match(stack.last()) {
             match delim.side {
-                Left => { stack.push(delim); }
-                Right => { stack.pop(); }
+                Left => {
+                    stack.push(delim);
+                }
+                Right => {
+                    stack.pop();
+                }
             }
         } else {
             return Result::Error(delim.p1_score());

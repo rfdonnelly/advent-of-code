@@ -27,8 +27,7 @@ impl Default for Pattern {
 
 impl From<&str> for Pattern {
     fn from(s: &str) -> Self {
-        s
-            .chars()
+        s.chars()
             .map(|c| c as u8 - 'a' as u8)
             .fold(Pattern::default(), |mut acc, index| {
                 acc.segments |= 1 << index;
@@ -44,10 +43,7 @@ impl BitAnd for Pattern {
     fn bitand(self, rhs: Self) -> Self::Output {
         let segments = self.segments & rhs.segments;
         let active = segments.count_ones() as u8;
-        Self {
-            segments,
-            active,
-        }
+        Self { segments, active }
     }
 }
 
@@ -112,12 +108,7 @@ impl From<&str> for Entry {
     fn from(s: &str) -> Self {
         let mut halves = s
             .split(" | ")
-            .map(|half| {
-                half
-                    .split(" ")
-                    .map(Pattern::from)
-                    .collect::<Vec<Pattern>>()
-            });
+            .map(|half| half.split(" ").map(Pattern::from).collect::<Vec<Pattern>>());
 
         Self {
             patterns: halves.next().unwrap(),
@@ -128,12 +119,14 @@ impl From<&str> for Entry {
 
 impl Entry {
     fn output_value(&self) -> usize {
-        let one = self.patterns
+        let one = self
+            .patterns
             .iter()
             .find(|&&segments| segments.active == 2)
             .unwrap();
 
-        let four = self.patterns
+        let four = self
+            .patterns
             .iter()
             .find(|&&segments| segments.active == 4)
             .unwrap();
@@ -148,10 +141,7 @@ impl Entry {
 }
 
 fn p1(input: &str) -> usize {
-    let entries = input
-        .lines()
-        .map(Entry::from)
-        .collect::<Vec<Entry>>();
+    let entries = input.lines().map(Entry::from).collect::<Vec<Entry>>();
 
     entries
         .iter()
@@ -162,15 +152,9 @@ fn p1(input: &str) -> usize {
 }
 
 fn p2(input: &str) -> usize {
-    let entries = input
-        .lines()
-        .map(Entry::from)
-        .collect::<Vec<Entry>>();
+    let entries = input.lines().map(Entry::from).collect::<Vec<Entry>>();
 
-    entries
-        .iter()
-        .map(Entry::output_value)
-        .sum()
+    entries.iter().map(Entry::output_value).sum()
 }
 
 #[cfg(test)]

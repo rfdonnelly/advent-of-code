@@ -65,17 +65,17 @@ struct Graph {
 
 impl Graph {
     fn new() -> Self {
-        Self { nodes: HashMap::new() }
+        Self {
+            nodes: HashMap::new(),
+        }
     }
 }
 
 impl From<&str> for Graph {
     fn from(s: &str) -> Self {
-        s
-            .lines()
+        s.lines()
             .map(|line| {
-                line
-                    .split_once("-")
+                line.split_once("-")
                     .unwrap()
                     .pipe(|(a, b)| (Node::from(a), Node::from(b)))
             })
@@ -95,21 +95,21 @@ fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut valid_paths: Vec<Vec<Node>> = Vec::new();
-    visit_node(&graph, &vec![], &mut valid_paths, Node::Start, SmallCaveVisitPolicy::Once);
+    visit_node(
+        &graph,
+        &vec![],
+        &mut valid_paths,
+        Node::Start,
+        SmallCaveVisitPolicy::Once,
+    );
 
     valid_paths.len()
 }
 
 fn contains_two_of_same_small(path: &[Node]) -> bool {
-    path
-        .iter()
+    path.iter()
         .filter(|node| node.is_small())
-        .map(|node| {
-            path
-                .iter()
-                .filter(|&n| n == node)
-                .count()
-        })
+        .map(|node| path.iter().filter(|&n| n == node).count())
         .any(|count| count == 2)
 }
 
@@ -119,11 +119,15 @@ enum SmallCaveVisitPolicy {
     SingleTwice,
 }
 
-fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, node: Node, policy: SmallCaveVisitPolicy) {
+fn visit_node(
+    graph: &Graph,
+    path: &[Node],
+    valid_paths: &mut Vec<Vec<Node>>,
+    node: Node,
+    policy: SmallCaveVisitPolicy,
+) {
     if matches!(node, Node::End) {
-        let path = path
-            .to_vec()
-            .tap_mut(|v| v.push(node));
+        let path = path.to_vec().tap_mut(|v| v.push(node));
         valid_paths.push(path);
         return;
     }
@@ -133,33 +137,25 @@ fn visit_node(graph: &Graph, path: &[Node], valid_paths: &mut Vec<Vec<Node>>, no
     if let Some(neighbors) = neighbors {
         for neighbor in neighbors {
             if node.is_small() {
-                let occurrences = path
-                    .iter()
-                    .filter(|&&n| n == node)
-                    .count();
+                let occurrences = path.iter().filter(|&&n| n == node).count();
 
-                let max_occurences =
-                    match policy {
-                        SmallCaveVisitPolicy::Once => {
+                let max_occurences = match policy {
+                    SmallCaveVisitPolicy::Once => 1,
+                    SmallCaveVisitPolicy::SingleTwice => {
+                        if contains_two_of_same_small(path) {
                             1
+                        } else {
+                            2
                         }
-                        SmallCaveVisitPolicy::SingleTwice => {
-                            if contains_two_of_same_small(path) {
-                                1
-                            } else {
-                                2
-                            }
-                        }
-                    };
+                    }
+                };
 
                 if occurrences >= max_occurences {
                     return;
                 }
             }
 
-            let path = path
-                .to_vec()
-                .tap_mut(|v| v.push(node));
+            let path = path.to_vec().tap_mut(|v| v.push(node));
             visit_node(graph, &path, valid_paths, *neighbor, policy);
         }
     }
@@ -169,7 +165,13 @@ fn p2(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut valid_paths: Vec<Vec<Node>> = Vec::new();
-    visit_node(&graph, &vec![], &mut valid_paths, Node::Start, SmallCaveVisitPolicy::SingleTwice);
+    visit_node(
+        &graph,
+        &vec![],
+        &mut valid_paths,
+        Node::Start,
+        SmallCaveVisitPolicy::SingleTwice,
+    );
 
     valid_paths.len()
 }

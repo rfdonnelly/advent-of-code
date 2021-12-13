@@ -20,34 +20,30 @@ struct Grid {
 
 impl From<&str> for Grid {
     fn from(s: &str) -> Self {
-        let xs = s
-            .lines()
-            .next()
-            .unwrap()
-            .len();
+        let xs = s.lines().next().unwrap().len();
 
-        let ys = s
-            .lines()
-            .count();
+        let ys = s.lines().count();
 
         let values = s
             .lines()
             .enumerate()
             .flat_map(|(y, line)| {
-                line
-                    .chars()
-                    .enumerate()
-                    .map(move |(x, c)| {
-                        let value = c.to_digit(10).unwrap() as u8;
-                        (x, y, value)
-                    })
+                line.chars().enumerate().map(move |(x, c)| {
+                    let value = c.to_digit(10).unwrap() as u8;
+                    (x, y, value)
+                })
             })
             .fold([[0u8; 10]; 10], |mut values, (x, y, value)| {
                 values[x][y] = value;
                 values
             });
 
-        Self { xs, ys, flashes: 0, values }
+        Self {
+            xs,
+            ys,
+            flashes: 0,
+            values,
+        }
     }
 }
 
@@ -73,10 +69,7 @@ impl fmt::Debug for Grid {
 
 impl Grid {
     fn step_for(&mut self, steps: usize) -> usize {
-        (0..steps)
-            .for_each(|_| {
-                self.step()
-            });
+        (0..steps).for_each(|_| self.step());
 
         self.flashes
     }
@@ -124,16 +117,11 @@ impl Grid {
 
             let neighbors = [-1, 0, 1]
                 .iter()
-                .flat_map(|xd| {
-                    [-1, 0, 1]
-                        .iter()
-                        .map(move |yd| (xd, yd))
-                })
+                .flat_map(|xd| [-1, 0, 1].iter().map(move |yd| (xd, yd)))
                 .filter_map(|(xd, yd)| {
                     let xn = (x as i64) + xd;
                     let yn = (y as i64) + yd;
-                    let valid =
-                        xn >= 0
+                    let valid = xn >= 0
                         && xn <= (self.xs as i64) - 1
                         && yn >= 0
                         && yn <= (self.ys as i64) - 1
