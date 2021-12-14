@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 itertools = "0.10.0"
 tap = "1.0"
+rayon = "1.5"
 
 [dev-dependencies]
 indoc = "1.0"

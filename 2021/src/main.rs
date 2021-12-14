@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use rayon::prelude::*;
+
 mod d01;
 mod d02;
 mod d03;
@@ -36,7 +38,7 @@ fn main() {
         Box::new(d14::run),
     ];
 
-    let output = days.iter()
+    let output = days.par_iter()
         .map(|day| day())
         .collect::<Vec<String>>()
         .join("");
