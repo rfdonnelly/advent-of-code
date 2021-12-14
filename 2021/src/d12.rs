@@ -134,29 +134,29 @@ fn visit_node(
         return;
     }
 
+    if node.is_small() {
+        let occurrences = path.iter().filter(|&&n| n == node).count();
+
+        let max_occurences = match policy {
+            SmallCaveVisitPolicy::Once => 1,
+            SmallCaveVisitPolicy::SingleTwice => {
+                if contains_two_of_same_small(path) {
+                    1
+                } else {
+                    2
+                }
+            }
+        };
+
+        if occurrences >= max_occurences {
+            return;
+        }
+    }
+
     let neighbors = graph.nodes.get(&node);
 
     if let Some(neighbors) = neighbors {
         for neighbor in neighbors {
-            if node.is_small() {
-                let occurrences = path.iter().filter(|&&n| n == node).count();
-
-                let max_occurences = match policy {
-                    SmallCaveVisitPolicy::Once => 1,
-                    SmallCaveVisitPolicy::SingleTwice => {
-                        if contains_two_of_same_small(path) {
-                            1
-                        } else {
-                            2
-                        }
-                    }
-                };
-
-                if occurrences >= max_occurences {
-                    return;
-                }
-            }
-
             let path = path.to_vec().tap_mut(|v| v.push(node));
             visit_node(graph, &path, valid_paths, *neighbor, policy);
         }
