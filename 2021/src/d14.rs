@@ -62,10 +62,8 @@ impl From<&str> for Input {
     }
 }
 
-fn p1(input: &str) -> usize {
-    let input = Input::from(input);
-
-    let polymer = (0..10)
+fn grow(input: Input, steps: usize) -> String {
+    (0..steps)
         .fold(input.template, |polymer, _| {
             polymer
                 .chars()
@@ -81,8 +79,10 @@ fn p1(input: &str) -> usize {
                 })
                 .filter_map(|o| o)
                 .collect::<String>()
-        });
+        })
+}
 
+fn min_max(polymer: &str) -> (usize, usize) {
     let counts = polymer
         .chars()
         .fold(HashMap::new(), |mut counts, c| {
@@ -94,10 +94,19 @@ fn p1(input: &str) -> usize {
         .collect::<Vec<usize>>()
         .tap_mut(|counts| counts.sort());
 
-    let min_count = counts.first().unwrap();
-    let max_count = counts.last().unwrap();
+    let min = counts.first().unwrap();
+    let max = counts.last().unwrap();
 
-    max_count - min_count
+    (*min, *max)
+}
+
+fn p1(input: &str) -> usize {
+    let input = Input::from(input);
+
+    let polymer = grow(input, 10);
+    let (min, max) = min_max(&polymer);
+
+    max - min
 }
 
 fn p2(input: &str) -> usize {
@@ -142,9 +151,9 @@ mod tests {
     #[test]
     #[ignore]
     fn p2() {
-        assert_eq!(super::p2(INPUT), 17);
+        assert_eq!(super::p2(INPUT), 2188189693529);
 
         let input = input(DAY);
-        assert_eq!(super::p2(&input), 770);
+        // assert_eq!(super::p2(&input), 770);
     }
 }
