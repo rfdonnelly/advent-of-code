@@ -95,7 +95,7 @@ fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut valid_paths: usize = 0;
-    let mut path: Vec<Node> = Vec::new();
+    let mut path = Path::new();
     visit_node(
         &graph,
         &mut path,
@@ -109,11 +109,11 @@ fn p1(input: &str) -> usize {
 
 // NOTE: Tried implementing this as a fold into a HashMap.  It took more than took twice as long
 // increasing the debug build runtime from 3s to 7s.
-fn contains_two_of_same_small(path: &[Node]) -> bool {
-    path.iter()
-        .filter(|node| node.is_small())
-        .map(|node| path.iter().filter(|&n| n == node).count())
-        .any(|count| count == 2)
+fn contains_two_of_same_small(path: &Path) -> bool {
+    path.counts
+        .iter()
+        .filter(|(node, _count)| node.is_small())
+        .any(|(_node, count)| *count == 2)
 }
 
 #[derive(Copy, Clone)]
@@ -122,9 +122,33 @@ enum SmallCaveVisitPolicy {
     SingleTwice,
 }
 
+struct Path {
+    nodes: Vec<Node>,
+    counts: HashMap<Node, usize>,
+}
+
+impl Path {
+    fn new() -> Self {
+        Self {
+            nodes: Vec::new(),
+            counts: HashMap::new(),
+        }
+    }
+
+    fn push(&mut self, node: Node) {
+        self.nodes.push(node);
+        *self.counts.entry(node).or_insert(0) += 1;
+    }
+
+    fn pop(&mut self) {
+        let node = self.nodes.pop().unwrap();
+        *self.counts.entry(node).or_insert(1) -= 1;
+    }
+}
+
 fn visit_node(
     graph: &Graph,
-    path: &mut Vec<Node>,
+    path: &mut Path,
     valid_paths: &mut usize,
     node: Node,
     policy: SmallCaveVisitPolicy,
@@ -135,9 +159,9 @@ fn visit_node(
     }
 
     if node.is_small() {
-        let occurrences = path.iter().filter(|&&n| n == node).count();
+        let occurrences = path.counts.get(&node).unwrap_or(&0);
 
-        if occurrences > 0 {
+        if occurrences > &0 {
             let max_occurences = match policy {
                 SmallCaveVisitPolicy::Once => 1,
                 SmallCaveVisitPolicy::SingleTwice => {
@@ -149,7 +173,7 @@ fn visit_node(
                 }
             };
 
-            if occurrences >= max_occurences {
+            if occurrences >= &max_occurences {
                 return;
             }
         }
@@ -170,7 +194,7 @@ fn p2(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut valid_paths: usize = 0;
-    let mut path: Vec<Node> = Vec::new();
+    let mut path = Path::new();
     visit_node(
         &graph,
         &mut path,
