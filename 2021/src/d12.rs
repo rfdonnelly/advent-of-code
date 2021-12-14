@@ -94,7 +94,7 @@ impl From<&str> for Graph {
 fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
-    let mut valid_paths: Vec<Vec<Node>> = Vec::new();
+    let mut valid_paths: usize = 0;
     let mut path: Vec<Node> = Vec::new();
     visit_node(
         &graph,
@@ -104,7 +104,7 @@ fn p1(input: &str) -> usize {
         SmallCaveVisitPolicy::Once,
     );
 
-    valid_paths.len()
+    valid_paths
 }
 
 // NOTE: Tried implementing this as a fold into a HashMap.  It took more than took twice as long
@@ -125,13 +125,12 @@ enum SmallCaveVisitPolicy {
 fn visit_node(
     graph: &Graph,
     path: &mut Vec<Node>,
-    valid_paths: &mut Vec<Vec<Node>>,
+    valid_paths: &mut usize,
     node: Node,
     policy: SmallCaveVisitPolicy,
 ) {
     if matches!(node, Node::End) {
-        let path = path.clone().tap_mut(|v| v.push(node));
-        valid_paths.push(path);
+        *valid_paths += 1;
         return;
     }
 
@@ -168,7 +167,7 @@ fn visit_node(
 fn p2(input: &str) -> usize {
     let graph = Graph::from(input);
 
-    let mut valid_paths: Vec<Vec<Node>> = Vec::new();
+    let mut valid_paths: usize = 0;
     let mut path: Vec<Node> = Vec::new();
     visit_node(
         &graph,
@@ -178,7 +177,7 @@ fn p2(input: &str) -> usize {
         SmallCaveVisitPolicy::SingleTwice,
     );
 
-    valid_paths.len()
+    valid_paths
 }
 
 #[cfg(test)]
