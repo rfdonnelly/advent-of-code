@@ -137,19 +137,21 @@ fn visit_node(
     if node.is_small() {
         let occurrences = path.iter().filter(|&&n| n == node).count();
 
-        let max_occurences = match policy {
-            SmallCaveVisitPolicy::Once => 1,
-            SmallCaveVisitPolicy::SingleTwice => {
-                if contains_two_of_same_small(path) {
-                    1
-                } else {
-                    2
+        if occurrences > 0 {
+            let max_occurences = match policy {
+                SmallCaveVisitPolicy::Once => 1,
+                SmallCaveVisitPolicy::SingleTwice => {
+                    if contains_two_of_same_small(path) {
+                        1
+                    } else {
+                        2
+                    }
                 }
-            }
-        };
+            };
 
-        if occurrences >= max_occurences {
-            return;
+            if occurrences >= max_occurences {
+                return;
+            }
         }
     }
 
