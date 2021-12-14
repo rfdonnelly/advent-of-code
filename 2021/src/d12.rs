@@ -107,15 +107,6 @@ fn p1(input: &str) -> usize {
     valid_paths
 }
 
-// NOTE: Tried implementing this as a fold into a HashMap.  It took more than took twice as long
-// increasing the debug build runtime from 3s to 7s.
-fn contains_two_of_same_small(path: &Path) -> bool {
-    path.counts
-        .iter()
-        .filter(|(node, _count)| node.is_small())
-        .any(|(_node, count)| *count == 2)
-}
-
 #[derive(Copy, Clone)]
 enum SmallCaveVisitPolicy {
     Once,
@@ -137,12 +128,22 @@ impl Path {
 
     fn push(&mut self, node: Node) {
         self.nodes.push(node);
-        *self.counts.entry(node).or_insert(0) += 1;
+        if node.is_small() {
+            *self.counts.entry(node).or_insert(0) += 1;
+        }
     }
 
     fn pop(&mut self) {
         let node = self.nodes.pop().unwrap();
-        *self.counts.entry(node).or_insert(1) -= 1;
+        if node.is_small() {
+            *self.counts.entry(node).or_insert(1) -= 1;
+        }
+    }
+
+    fn contains_two_of_same_small(&self) -> bool {
+        self.counts
+            .iter()
+            .any(|(_node, count)| *count == 2)
     }
 }
 
@@ -165,7 +166,7 @@ fn visit_node(
             let max_occurences = match policy {
                 SmallCaveVisitPolicy::Once => 1,
                 SmallCaveVisitPolicy::SingleTwice => {
-                    if contains_two_of_same_small(path) {
+                    if path.contains_two_of_same_small() {
                         1
                     } else {
                         2
