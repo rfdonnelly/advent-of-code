@@ -17,13 +17,13 @@ pub fn run() {
 enum Node {
     Start,
     End,
-    Big(char, Option<char>),
-    Small(char, Option<char>),
+    Big(char),
+    Small(char),
 }
 
 impl Node {
     fn is_small(&self) -> bool {
-        matches!(self, Node::Small(_, _))
+        matches!(self, Node::Small(_))
     }
 }
 
@@ -32,10 +32,8 @@ impl fmt::Debug for Node {
         match self {
             Node::Start => write!(f, "start"),
             Node::End => write!(f, "end"),
-            Node::Big(c1, Some(c2)) => write!(f, "{}{}", c1, c2),
-            Node::Small(c1, Some(c2)) => write!(f, "{}{}", c1, c2),
-            Node::Big(c, None) => write!(f, "{}", c),
-            Node::Small(c, None) => write!(f, "{}", c),
+            Node::Big(c) => write!(f, "{}", c),
+            Node::Small(c) => write!(f, "{}", c),
         }
     }
 }
@@ -48,10 +46,10 @@ impl From<&str> for Node {
             _ => {
                 let mut chars = s.chars();
                 let c = chars.next().unwrap();
-                match c {
-                    c if c.is_lowercase() => Node::Small(c.into(), chars.next()),
-                    c if c.is_uppercase() => Node::Big(c.into(), chars.next()),
-                    _ => unreachable!(),
+                if c.is_lowercase() {
+                    Node::Small(c)
+                } else {
+                    Node::Big(c)
                 }
             }
         }
