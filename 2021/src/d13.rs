@@ -6,8 +6,10 @@ const DAY: usize = 13;
 
 pub fn run() {
     let input = input(DAY);
-    println!("d{:02}p1: {}", DAY, p1(&input));
-    println!("d{:02}p2:\n{}", DAY, p2(&input));
+    let time = std::time::Instant::now();
+    println!("d{:02}p1: {} in {:?}", DAY, p1(&input), time.elapsed());
+    let time = std::time::Instant::now();
+    println!("d{:02}p2:\n{} in {:?}", DAY, p2(&input), time.elapsed());
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
