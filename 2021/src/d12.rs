@@ -95,9 +95,10 @@ fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut valid_paths: Vec<Vec<Node>> = Vec::new();
+    let mut path: Vec<Node> = Vec::new();
     visit_node(
         &graph,
-        &vec![],
+        &mut path,
         &mut valid_paths,
         Node::Start,
         SmallCaveVisitPolicy::Once,
@@ -123,13 +124,13 @@ enum SmallCaveVisitPolicy {
 
 fn visit_node(
     graph: &Graph,
-    path: &[Node],
+    path: &mut Vec<Node>,
     valid_paths: &mut Vec<Vec<Node>>,
     node: Node,
     policy: SmallCaveVisitPolicy,
 ) {
     if matches!(node, Node::End) {
-        let path = path.to_vec().tap_mut(|v| v.push(node));
+        let path = path.clone().tap_mut(|v| v.push(node));
         valid_paths.push(path);
         return;
     }
@@ -156,10 +157,11 @@ fn visit_node(
     let neighbors = graph.nodes.get(&node);
 
     if let Some(neighbors) = neighbors {
+        path.push(node);
         for neighbor in neighbors {
-            let path = path.to_vec().tap_mut(|v| v.push(node));
-            visit_node(graph, &path, valid_paths, *neighbor, policy);
+            visit_node(graph, path, valid_paths, *neighbor, policy);
         }
+        path.pop();
     }
 }
 
@@ -167,9 +169,10 @@ fn p2(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut valid_paths: Vec<Vec<Node>> = Vec::new();
+    let mut path: Vec<Node> = Vec::new();
     visit_node(
         &graph,
-        &vec![],
+        &mut path,
         &mut valid_paths,
         Node::Start,
         SmallCaveVisitPolicy::SingleTwice,
