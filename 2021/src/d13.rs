@@ -4,12 +4,15 @@ use std::collections::HashSet;
 
 const DAY: usize = 13;
 
-pub fn run() {
+pub fn run() -> String {
     let input = input(DAY);
+    let mut output = String::new();
     let time = std::time::Instant::now();
-    println!("d{:02}p1: {} in {:?}", DAY, p1(&input), time.elapsed());
+    output += &format!("d{:02}p1: {} in {:?}\n", DAY, p1(&input), time.elapsed());
     let time = std::time::Instant::now();
-    println!("d{:02}p2:\n{} in {:?}", DAY, p2(&input), time.elapsed());
+    let p2_output = p2(&input);
+    output += &format!("d{:02}p2: in {:?}\n{}\n", DAY, time.elapsed(), p2_output);
+    output
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]

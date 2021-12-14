@@ -17,20 +17,33 @@ mod d13;
 mod d14;
 
 fn main() {
-    d01::run();
-    d02::run();
-    d03::run();
-    d04::run();
-    d05::run();
-    d06::run();
-    d07::run();
-    d08::run();
-    d09::run();
-    d10::run();
-    d11::run();
-    d12::run();
-    d13::run();
-    d14::run();
+    let time = std::time::Instant::now();
+
+    let days: Vec<Box<dyn Fn() -> String + Send + Sync>> = vec![
+        Box::new(d01::run),
+        Box::new(d02::run),
+        Box::new(d03::run),
+        Box::new(d04::run),
+        Box::new(d05::run),
+        Box::new(d06::run),
+        Box::new(d07::run),
+        Box::new(d08::run),
+        Box::new(d09::run),
+        Box::new(d10::run),
+        Box::new(d11::run),
+        Box::new(d12::run),
+        Box::new(d13::run),
+        Box::new(d14::run),
+    ];
+
+    let output = days.iter()
+        .map(|day| day())
+        .collect::<Vec<String>>()
+        .join("");
+
+    println!("{}", output);
+
+    println!("total {:?}", time.elapsed());
 }
 
 fn load_file<P>(path: P) -> String

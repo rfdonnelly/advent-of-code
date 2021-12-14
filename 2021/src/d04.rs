@@ -2,12 +2,14 @@ use crate::input;
 
 const DAY: usize = 4;
 
-pub fn run() {
+pub fn run() -> String {
     let input = input(DAY);
+    let mut output = String::new();
     let time = std::time::Instant::now();
-    println!("d{:02}p1: {} in {:?}", DAY, p1(&input), time.elapsed());
+    output += &format!("d{:02}p1: {} in {:?}\n", DAY, p1(&input), time.elapsed());
     let time = std::time::Instant::now();
-    println!("d{:02}p2: {} in {:?}", DAY, p2(&input), time.elapsed());
+    output += &format!("d{:02}p2: {} in {:?}\n", DAY, p2(&input), time.elapsed());
+    output
 }
 
 #[derive(Debug)]
