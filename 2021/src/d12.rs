@@ -96,17 +96,13 @@ fn allow_one_small(_path: &Path) -> usize {
 fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
-    let mut valid_paths: usize = 0;
     let mut path = Path::new();
     visit_node(
         &graph,
         &mut path,
-        &mut valid_paths,
         Node::Start,
         allow_one_small,
-    );
-
-    valid_paths
+    )
 }
 
 struct Path {
@@ -154,49 +150,50 @@ impl Path {
 fn visit_node<F>(
     graph: &Graph,
     path: &mut Path,
-    valid_paths: &mut usize,
     node: Node,
     allowed: F,
-)
+) -> usize
 where
     F: Fn(&Path) -> usize + Copy,
 {
     if matches!(node, Node::End) {
-        *valid_paths += 1;
-        return;
+        return 1;
     }
 
     if node.is_small() {
         let occurrences = path.counts.get(&node).unwrap_or(&0);
         if occurrences > &0 && occurrences >= &allowed(path) {
-            return;
+            return 0;
         }
     }
 
-    graph.nodes.get(&node).and_then(|neighbors| {
-        path.push(node);
-        for neighbor in neighbors {
-            visit_node(graph, path, valid_paths, *neighbor, allowed);
-        }
-        path.pop();
-        Some(())
-    });
+    graph.nodes
+        .get(&node)
+        .and_then(|neighbors| {
+            path.push(node);
+            let valid_paths = neighbors
+                .iter()
+                .map(|neighbor| {
+                    visit_node(graph, path, *neighbor, allowed)
+                })
+                .sum();
+            path.pop();
+
+            Some(valid_paths)
+        })
+        .unwrap_or(0)
 }
 
 fn p2(input: &str) -> usize {
     let graph = Graph::from(input);
 
-    let mut valid_paths: usize = 0;
     let mut path = Path::new();
     visit_node(
         &graph,
         &mut path,
-        &mut valid_paths,
         Node::Start,
         Path::allow_two_of_same_small,
-    );
-
-    valid_paths
+    )
 }
 
 #[cfg(test)]
