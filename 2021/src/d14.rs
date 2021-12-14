@@ -1,7 +1,7 @@
 use crate::input;
 
 use itertools::Itertools;
-use tap::prelude::*;
+use itertools::MinMaxResult::MinMax;
 
 use std::collections::HashMap;
 
@@ -13,9 +13,11 @@ pub fn run() {
     println!("d{:02}p2: {}", DAY, p2(&input));
 }
 
+type Pair = (char, char);
+
 #[derive(Debug)]
 struct Rule {
-    pair: (char, char),
+    pair: Pair,
     insert: char,
 }
 
@@ -39,7 +41,7 @@ impl From<&str> for Rule {
 #[derive(Debug)]
 struct Input {
     template: String,
-    rules: HashMap<(char, char), char>,
+    rules: HashMap<Pair, char>,
 }
 
 impl From<&str> for Input {
@@ -62,55 +64,54 @@ impl From<&str> for Input {
     }
 }
 
-fn grow(input: Input, steps: usize) -> String {
-    (0..steps)
-        .fold(input.template, |polymer, _| {
-            polymer
-                .chars()
-                .tuple_windows::<(_, _)>()
-                .enumerate()
-                .flat_map(|(i, (a, b))| {
-                    let insert = input.rules.get(&(a, b)).unwrap();
-                    if i == 0 {
-                        [Some(a), Some(*insert), Some(b)]
-                    } else {
-                        [None, Some(*insert), Some(b)]
-                    }
-                })
-                .filter_map(|o| o)
-                .collect::<String>()
-        })
-}
-
-fn min_max(polymer: &str) -> (usize, usize) {
-    let counts = polymer
-        .chars()
-        .fold(HashMap::new(), |mut counts, c| {
-            *counts.entry(c).or_insert(0) += 1;
-            counts
-        })
-        .values()
-        .map(|v| *v)
-        .collect::<Vec<usize>>()
-        .tap_mut(|counts| counts.sort());
-
-    let min = counts.first().unwrap();
-    let max = counts.last().unwrap();
-
-    (*min, *max)
-}
-
 fn p1(input: &str) -> usize {
     let input = Input::from(input);
+    polymerize(&input, 10)
+}
 
-    let polymer = grow(input, 10);
-    let (min, max) = min_max(&polymer);
+// Inspired by: https://github.com/MrRobb/advent-of-code-2021/blob/main/src/day14.rs
+fn polymerize(input: &Input, steps: usize) -> usize {
+    let template_pair_counts = input.template
+        .chars()
+        .tuple_windows()
+        .counts();
 
-    max - min
+    let pair_counts = (0..steps)
+        .fold(template_pair_counts, |pair_counts, _| {
+            pair_counts
+                .iter()
+                .fold(pair_counts.clone(), |mut next_pair_counts, (pair, count)| {
+                    let insertion = input.rules.get(pair).unwrap();
+                    *next_pair_counts.entry((pair.0, *insertion)).or_default() += count;
+                    *next_pair_counts.entry((*insertion, pair.1)).or_default() += count;
+                    *next_pair_counts.entry(*pair).or_default() -= count;
+
+                    next_pair_counts
+                })
+        });
+
+    let char_counts = pair_counts
+        .iter()
+        .fold(HashMap::new(), |mut char_counts, ((a, b), count)| {
+            char_counts.entry(*a).or_insert((0, 0)).0 += count;
+            char_counts.entry(*b).or_insert((0, 0)).1 += count;
+
+            char_counts
+        })
+        .values()
+        .map(|(l, r)| *l.max(r))
+        .collect::<Vec<usize>>();
+
+    if let MinMax(min, max) = char_counts.iter().minmax() {
+        (max - min) as usize
+    } else {
+        unreachable!()
+    }
 }
 
 fn p2(input: &str) -> usize {
-    0
+    let input = Input::from(input);
+    polymerize(&input, 40)
 }
 
 #[cfg(test)]
@@ -149,11 +150,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
         assert_eq!(super::p2(INPUT), 2188189693529);
 
         let input = input(DAY);
-        // assert_eq!(super::p2(&input), 770);
+        assert_eq!(super::p2(&input), 4110215602456);
     }
 }
