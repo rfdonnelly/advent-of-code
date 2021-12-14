@@ -91,6 +91,10 @@ impl From<&str> for Graph {
     }
 }
 
+fn allow_one_small(_path: &Path) -> usize {
+    1
+}
+
 fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
@@ -101,16 +105,10 @@ fn p1(input: &str) -> usize {
         &mut path,
         &mut valid_paths,
         Node::Start,
-        SmallCaveVisitPolicy::Once,
+        allow_one_small,
     );
 
     valid_paths
-}
-
-#[derive(Copy, Clone)]
-enum SmallCaveVisitPolicy {
-    Once,
-    SingleTwice,
 }
 
 struct Path {
@@ -145,15 +143,26 @@ impl Path {
             .iter()
             .any(|(_node, count)| *count == 2)
     }
+
+    fn allow_two_of_same_small(&self) -> usize {
+        if self.contains_two_of_same_small() {
+            1
+        } else {
+            2
+        }
+    }
 }
 
-fn visit_node(
+fn visit_node<F>(
     graph: &Graph,
     path: &mut Path,
     valid_paths: &mut usize,
     node: Node,
-    policy: SmallCaveVisitPolicy,
-) {
+    allowed: F,
+)
+where
+    F: Fn(&Path) -> usize + Copy,
+{
     if matches!(node, Node::End) {
         *valid_paths += 1;
         return;
@@ -163,18 +172,7 @@ fn visit_node(
         let occurrences = path.counts.get(&node).unwrap_or(&0);
 
         if occurrences > &0 {
-            let max_occurences = match policy {
-                SmallCaveVisitPolicy::Once => 1,
-                SmallCaveVisitPolicy::SingleTwice => {
-                    if path.contains_two_of_same_small() {
-                        1
-                    } else {
-                        2
-                    }
-                }
-            };
-
-            if occurrences >= &max_occurences {
+            if occurrences >= &allowed(path) {
                 return;
             }
         }
@@ -185,7 +183,7 @@ fn visit_node(
     if let Some(neighbors) = neighbors {
         path.push(node);
         for neighbor in neighbors {
-            visit_node(graph, path, valid_paths, *neighbor, policy);
+            visit_node(graph, path, valid_paths, *neighbor, allowed);
         }
         path.pop();
     }
@@ -201,7 +199,7 @@ fn p2(input: &str) -> usize {
         &mut path,
         &mut valid_paths,
         Node::Start,
-        SmallCaveVisitPolicy::SingleTwice,
+        Path::allow_two_of_same_small,
     );
 
     valid_paths
