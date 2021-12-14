@@ -170,23 +170,19 @@ where
 
     if node.is_small() {
         let occurrences = path.counts.get(&node).unwrap_or(&0);
-
-        if occurrences > &0 {
-            if occurrences >= &allowed(path) {
-                return;
-            }
+        if occurrences > &0 && occurrences >= &allowed(path) {
+            return;
         }
     }
 
-    let neighbors = graph.nodes.get(&node);
-
-    if let Some(neighbors) = neighbors {
+    graph.nodes.get(&node).and_then(|neighbors| {
         path.push(node);
         for neighbor in neighbors {
             visit_node(graph, path, valid_paths, *neighbor, allowed);
         }
         path.pop();
-    }
+        Some(())
+    });
 }
 
 fn p2(input: &str) -> usize {
