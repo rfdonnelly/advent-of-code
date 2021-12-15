@@ -90,9 +90,11 @@ fn polymerize(input: &Input, steps: usize) -> usize {
                 .iter()
                 .fold(pair_counts.clone(), |mut next_pair_counts, (pair, count)| {
                     let insertion = input.rules.get(pair).unwrap();
+                    // We only need to calculate pair counts...
                     *next_pair_counts.entry((pair.0, *insertion)).or_default() += count;
                     *next_pair_counts.entry((*insertion, pair.1)).or_default() += count;
                     *next_pair_counts.entry(*pair).or_default() -= count;
+                    // ...so that we can calculate char counts
                     *char_counts.entry(*insertion).or_default() += count;
 
                     next_pair_counts
