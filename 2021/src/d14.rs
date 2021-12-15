@@ -80,33 +80,28 @@ fn polymerize(input: &Input, steps: usize) -> usize {
         .tuple_windows()
         .counts();
 
-    let pair_counts = (0..steps)
-        .fold(template_pair_counts, |pair_counts, _| {
-            pair_counts
+    let initial_char_counts = input.template
+        .chars()
+        .counts();
+
+    let (_, char_counts) = (0..steps)
+        .fold((template_pair_counts, initial_char_counts), |(pair_counts, mut char_counts), _| {
+            let next_pair_counts = pair_counts
                 .iter()
                 .fold(pair_counts.clone(), |mut next_pair_counts, (pair, count)| {
                     let insertion = input.rules.get(pair).unwrap();
                     *next_pair_counts.entry((pair.0, *insertion)).or_default() += count;
                     *next_pair_counts.entry((*insertion, pair.1)).or_default() += count;
                     *next_pair_counts.entry(*pair).or_default() -= count;
+                    *char_counts.entry(*insertion).or_default() += count;
 
                     next_pair_counts
-                })
+                });
+
+            (next_pair_counts, char_counts)
         });
 
-    let char_counts = pair_counts
-        .iter()
-        .fold(HashMap::new(), |mut char_counts, ((a, b), count)| {
-            char_counts.entry(*a).or_insert((0, 0)).0 += count;
-            char_counts.entry(*b).or_insert((0, 0)).1 += count;
-
-            char_counts
-        })
-        .values()
-        .map(|(l, r)| *l.max(r))
-        .collect::<Vec<usize>>();
-
-    if let MinMax(min, max) = char_counts.iter().minmax() {
+    if let MinMax(min, max) = char_counts.into_values().minmax() {
         (max - min) as usize
     } else {
         unreachable!()
