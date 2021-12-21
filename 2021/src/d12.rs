@@ -101,12 +101,7 @@ fn p1(input: &str) -> usize {
     let graph = Graph::from(input);
 
     let mut path = Path::new();
-    visit_node(
-        &graph,
-        &mut path,
-        Node::Start,
-        allow_one_small,
-    )
+    visit_node(&graph, &mut path, Node::Start, allow_one_small)
 }
 
 struct Path {
@@ -137,9 +132,7 @@ impl Path {
     }
 
     fn contains_two_of_same_small(&self) -> bool {
-        self.counts
-            .iter()
-            .any(|(_node, count)| *count == 2)
+        self.counts.iter().any(|(_node, count)| *count == 2)
     }
 
     fn allow_two_of_same_small(&self) -> usize {
@@ -151,12 +144,7 @@ impl Path {
     }
 }
 
-fn visit_node<F>(
-    graph: &Graph,
-    path: &mut Path,
-    node: Node,
-    allowed: F,
-) -> usize
+fn visit_node<F>(graph: &Graph, path: &mut Path, node: Node, allowed: F) -> usize
 where
     F: Fn(&Path) -> usize + Copy,
 {
@@ -171,15 +159,14 @@ where
         }
     }
 
-    graph.nodes
+    graph
+        .nodes
         .get(&node)
         .and_then(|neighbors| {
             path.push(node);
             let valid_paths = neighbors
                 .iter()
-                .map(|neighbor| {
-                    visit_node(graph, path, *neighbor, allowed)
-                })
+                .map(|neighbor| visit_node(graph, path, *neighbor, allowed))
                 .sum();
             path.pop();
 

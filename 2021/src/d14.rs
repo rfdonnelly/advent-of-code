@@ -27,14 +27,9 @@ struct Rule {
 
 impl From<&str> for Rule {
     fn from(s: &str) -> Self {
-        let (pair, insert) = s
-            .split_once(" -> ")
-            .unwrap();
+        let (pair, insert) = s.split_once(" -> ").unwrap();
 
-        let pair = (
-            pair.chars().nth(0).unwrap(),
-            pair.chars().nth(1).unwrap(),
-        );
+        let pair = (pair.chars().nth(0).unwrap(), pair.chars().nth(1).unwrap());
 
         let insert = insert.chars().nth(0).unwrap();
 
@@ -50,9 +45,7 @@ struct Input {
 
 impl From<&str> for Input {
     fn from(s: &str) -> Self {
-        let (template, rules) = s
-            .split_once("\n\n")
-            .unwrap();
+        let (template, rules) = s.split_once("\n\n").unwrap();
 
         let template = template.into();
 
@@ -75,20 +68,16 @@ fn p1(input: &str) -> usize {
 
 // Inspired by: https://github.com/MrRobb/advent-of-code-2021/blob/main/src/day14.rs
 fn polymerize(input: &Input, steps: usize) -> usize {
-    let template_pair_counts = input.template
-        .chars()
-        .tuple_windows()
-        .counts();
+    let template_pair_counts = input.template.chars().tuple_windows().counts();
 
-    let initial_char_counts = input.template
-        .chars()
-        .counts();
+    let initial_char_counts = input.template.chars().counts();
 
-    let (_, char_counts) = (0..steps)
-        .fold((template_pair_counts, initial_char_counts), |(pair_counts, mut char_counts), _| {
-            let next_pair_counts = pair_counts
-                .iter()
-                .fold(pair_counts.clone(), |mut next_pair_counts, (pair, count)| {
+    let (_, char_counts) = (0..steps).fold(
+        (template_pair_counts, initial_char_counts),
+        |(pair_counts, mut char_counts), _| {
+            let next_pair_counts = pair_counts.iter().fold(
+                pair_counts.clone(),
+                |mut next_pair_counts, (pair, count)| {
                     let insertion = input.rules.get(pair).unwrap();
                     // We only need to calculate pair counts...
                     *next_pair_counts.entry((pair.0, *insertion)).or_default() += count;
@@ -98,10 +87,12 @@ fn polymerize(input: &Input, steps: usize) -> usize {
                     *char_counts.entry(*insertion).or_default() += count;
 
                     next_pair_counts
-                });
+                },
+            );
 
             (next_pair_counts, char_counts)
-        });
+        },
+    );
 
     if let MinMax(min, max) = char_counts.into_values().minmax() {
         (max - min) as usize

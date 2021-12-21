@@ -1,7 +1,7 @@
 use crate::input;
 
-use bitvec::prelude::*;
 use bitvec::mem::BitMemory;
+use bitvec::prelude::*;
 
 const DAY: usize = 16;
 
@@ -31,13 +31,10 @@ impl From<&str> for Input {
         let bytes = nibbles
             .chunks(2)
             .map(|chunk| {
-                chunk
-                    .iter()
-                    .enumerate()
-                    .fold(0u8, |byte, (i, nibble)| {
-                        let nibble_idx = 1 - i;
-                        byte | nibble << (nibble_idx * 4)
-                    })
+                chunk.iter().enumerate().fold(0u8, |byte, (i, nibble)| {
+                    let nibble_idx = 1 - i;
+                    byte | nibble << (nibble_idx * 4)
+                })
             })
             .collect::<Vec<u8>>();
 
@@ -58,7 +55,7 @@ const WIDTH_TOTAL_LENGTH: usize = 15;
 const WIDTH_NUM_SUB_PKT: usize = 11;
 
 struct Parser {
-    bits: BitVec::<Msb0, u8>,
+    bits: BitVec<Msb0, u8>,
     index: usize,
 }
 
@@ -73,7 +70,7 @@ impl From<&Input> for Parser {
 impl Parser {
     fn take<I>(&mut self, nbits: usize) -> I
     where
-        I: BitMemory
+        I: BitMemory,
     {
         let value = self.bits[self.index..(self.index + nbits)].load_be::<I>();
         self.index += nbits;
@@ -130,67 +127,65 @@ impl From<u8> for Op {
 }
 
 impl From<&mut Parser> for Packet {
-
     fn from(parser: &mut Parser) -> Self {
         let version = parser.take(WIDTH_VERSION);
         let typeid = parser.take::<u8>(WIDTH_TYPEID);
         let typeid = TypeId::from(typeid);
-        let typ =
-            match typeid {
-                TypeId::Literal => {
-                    let mut nibbles: Vec<u8> = Vec::new();
+        let typ = match typeid {
+            TypeId::Literal => {
+                let mut nibbles: Vec<u8> = Vec::new();
 
-                    loop {
-                        let more = parser.take::<u8>(1) == 1;
-                        let nibble = parser.take(4);
-                        nibbles.push(nibble);
-                        if !more { break; }
+                loop {
+                    let more = parser.take::<u8>(1) == 1;
+                    let nibble = parser.take(4);
+                    nibbles.push(nibble);
+                    if !more {
+                        break;
                     }
-
-                    let n_nibbles = nibbles
-                        .iter()
-                        .count();
-                    let literal = nibbles
-                        .iter()
-                        .enumerate()
-                        .fold(0u64, |literal, (i, nibble)| {
-                            let nibble_idx = n_nibbles - i - 1;
-                            literal | (*nibble as u64) << (4 * nibble_idx)
-                        });
-
-                    Type::Literal(literal)
                 }
-                TypeId::Operator(op) => {
-                    let length_typeid = parser.take::<u8>(WIDTH_LENGTH_TYPEID) == 1;
-                    match length_typeid {
-                        false => {
-                            let total_length: usize = parser.take(WIDTH_TOTAL_LENGTH);
 
-                            let mut parsed_length = 0;
-                            let mut packets: Vec<Packet> = Vec::new();
-                            loop {
-                                let index = parser.index;
-                                packets.push(Packet::from(&mut *parser));
-                                let packet_length = parser.index - index;
-                                parsed_length += packet_length;
-                                if parsed_length == total_length {
-                                    break;
-                                }
+                let n_nibbles = nibbles.iter().count();
+                let literal = nibbles
+                    .iter()
+                    .enumerate()
+                    .fold(0u64, |literal, (i, nibble)| {
+                        let nibble_idx = n_nibbles - i - 1;
+                        literal | (*nibble as u64) << (4 * nibble_idx)
+                    });
+
+                Type::Literal(literal)
+            }
+            TypeId::Operator(op) => {
+                let length_typeid = parser.take::<u8>(WIDTH_LENGTH_TYPEID) == 1;
+                match length_typeid {
+                    false => {
+                        let total_length: usize = parser.take(WIDTH_TOTAL_LENGTH);
+
+                        let mut parsed_length = 0;
+                        let mut packets: Vec<Packet> = Vec::new();
+                        loop {
+                            let index = parser.index;
+                            packets.push(Packet::from(&mut *parser));
+                            let packet_length = parser.index - index;
+                            parsed_length += packet_length;
+                            if parsed_length == total_length {
+                                break;
                             }
-
-                            Type::Operator(op, packets)
                         }
-                        true => {
-                            let num_sub_pkt: u16 = parser.take(WIDTH_NUM_SUB_PKT);
-                            let packets = (0..num_sub_pkt)
-                                .map(|_| Packet::from(&mut *parser))
-                                .collect::<Vec<Packet>>();
 
-                            Type::Operator(op, packets)
-                        }
+                        Type::Operator(op, packets)
+                    }
+                    true => {
+                        let num_sub_pkt: u16 = parser.take(WIDTH_NUM_SUB_PKT);
+                        let packets = (0..num_sub_pkt)
+                            .map(|_| Packet::from(&mut *parser))
+                            .collect::<Vec<Packet>>();
+
+                        Type::Operator(op, packets)
                     }
                 }
-            };
+            }
+        };
 
         Self { version, typ }
     }
@@ -200,15 +195,10 @@ impl Packet {
     fn version_sum(&self) -> usize {
         let version: usize = self.version.into();
 
-        version +
-            match &self.typ {
+        version
+            + match &self.typ {
                 Type::Literal(_) => 0,
-                Type::Operator(_, children) => {
-                    children
-                        .iter()
-                        .map(Packet::version_sum)
-                        .sum()
-                }
+                Type::Operator(_, children) => children.iter().map(Packet::version_sum).sum(),
             }
     }
 
@@ -276,7 +266,8 @@ mod tests {
 
     #[test]
     fn p1() {
-        assert_eq!(Packet::from(&mut Parser::from(&Input::from("D2FE28"))),
+        assert_eq!(
+            Packet::from(&mut Parser::from(&Input::from("D2FE28"))),
             Packet {
                 version: 6,
                 typ: Type::Literal(2021),

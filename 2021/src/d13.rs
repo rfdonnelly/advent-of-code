@@ -116,24 +116,21 @@ fn p1(input: &str) -> usize {
 fn p2(input: &str) -> String {
     let input = Input::from(input);
 
-    let points = input.folds
+    let points = input
+        .folds
         .iter()
-        .fold(input.points, |grid, &fold| {
-            fold_many(&grid, fold)
-        });
-    let grid = points
-        .iter()
-        .fold(HashSet::new(), |mut grid, point| {
-            grid.insert(point);
-            grid
-        });
+        .fold(input.points, |grid, &fold| fold_many(&grid, fold));
+    let grid = points.iter().fold(HashSet::new(), |mut grid, point| {
+        grid.insert(point);
+        grid
+    });
 
     let width = grid.iter().map(|p| p.x).max().unwrap() + 1;
     let height = grid.iter().map(|p| p.y).max().unwrap() + 1;
     let mut s = String::with_capacity(width as usize * height as usize + height as usize);
     for y in 0..height {
         for x in 0..width {
-            if grid.contains(&Point {x, y}) {
+            if grid.contains(&Point { x, y }) {
                 s += "#";
             } else {
                 s += " ";
@@ -185,22 +182,28 @@ mod tests {
 
     #[test]
     fn p2() {
-        assert_eq!(super::p2(INPUT), indoc! {"
+        assert_eq!(
+            super::p2(INPUT),
+            indoc! {"
             #####
             #   #
             #   #
             #   #
             #####
-        "});
+        "}
+        );
 
         let input = input(DAY);
-        assert_eq!(super::p2(&input), indoc! {"
+        assert_eq!(
+            super::p2(&input),
+            indoc! {"
             #### ###  #  # #### #    ###  ###  ### 
             #    #  # #  # #    #    #  # #  # #  #
             ###  #  # #  # ###  #    #  # ###  #  #
             #    ###  #  # #    #    ###  #  # ### 
             #    #    #  # #    #    #    #  # # # 
             #### #     ##  #### #### #    ###  #  #
-        "});
+        "}
+        );
     }
 }
