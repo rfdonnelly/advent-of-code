@@ -294,6 +294,6 @@ mod tests {
         assert_eq!(super::p2("9C0141080250320F1802104A08"), 1);
 
         let input = input(DAY);
-        // assert_eq!(super::p2(&input), 4110215602456);
+        assert_eq!(super::p2(&input), 470949537659);
     }
 }
