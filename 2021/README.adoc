@@ -1,0 +1,17 @@
+= Advent of Code 2021
+
+== Run
+
+[source,sh]
+----
+cargo run --release
+----
+
+The solution for day 16 provides two implementations: one using bitvec (default) and the other using nom.
+Select the nom implementation using:
+
+[source,sh]
+----
+cargo run --no-default-features --features nom
+cargo test --no-default-features --features nom -- d16
+----

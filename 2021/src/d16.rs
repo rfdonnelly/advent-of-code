@@ -1,7 +1,10 @@
 use crate::input;
 
-use bitvec::mem::BitMemory;
-use bitvec::prelude::*;
+#[cfg(feature = "bitvec")]
+use bitvec::{
+    mem::BitMemory,
+    prelude::*,
+};
 
 const DAY: usize = 16;
 
@@ -54,11 +57,13 @@ const WIDTH_LENGTH_TYPEID: usize = 1;
 const WIDTH_TOTAL_LENGTH: usize = 15;
 const WIDTH_NUM_SUB_PKT: usize = 11;
 
+#[cfg(feature = "bitvec")]
 struct Parser {
     bits: BitVec<Msb0, u8>,
     index: usize,
 }
 
+#[cfg(feature = "bitvec")]
 impl From<&Input> for Parser {
     fn from(input: &Input) -> Self {
         let bits = BitVec::<Msb0, _>::from_slice(&input.bytes).unwrap();
@@ -67,6 +72,7 @@ impl From<&Input> for Parser {
     }
 }
 
+#[cfg(feature = "bitvec")]
 impl Parser {
     fn take<I>(&mut self, nbits: usize) -> I
     where

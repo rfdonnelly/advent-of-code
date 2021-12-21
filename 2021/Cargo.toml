@@ -9,7 +9,11 @@ edition = "2021"
 itertools = "0.10.0"
 tap = "1.0"
 rayon = "1.5"
-bitvec = "0.22"
+bitvec = { version = "0.22", optional = true }
+nom = { version = "7", optional = true }
 
 [dev-dependencies]
 indoc = "1.0"
+
+[features]
+default = ["bitvec"]
