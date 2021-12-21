@@ -51,6 +51,12 @@ struct Packet {
     typ: Type,
 }
 
+const WIDTH_VERSION: usize = 3;
+const WIDTH_TYPEID: usize = 3;
+const WIDTH_LENGTH_TYPEID: usize = 1;
+const WIDTH_TOTAL_LENGTH: usize = 15;
+const WIDTH_NUM_SUB_PKT: usize = 11;
+
 struct Parser {
     bits: BitVec::<Msb0, u8>,
     index: usize,
@@ -124,15 +130,10 @@ impl From<u8> for Op {
 }
 
 impl From<&mut Parser> for Packet {
-    fn from(parser: &mut Parser) -> Self {
-        let version_width = 3;
-        let typeid_width = 3;
-        let length_typeid_width = 1;
-        let total_length_width = 15;
-        let num_sub_pkt_width = 11;
 
-        let version = parser.take(version_width);
-        let typeid = parser.take::<u8>(typeid_width);
+    fn from(parser: &mut Parser) -> Self {
+        let version = parser.take(WIDTH_VERSION);
+        let typeid = parser.take::<u8>(WIDTH_TYPEID);
         let typeid = TypeId::from(typeid);
         let typ =
             match typeid {
@@ -160,10 +161,10 @@ impl From<&mut Parser> for Packet {
                     Type::Literal(literal)
                 }
                 TypeId::Operator(op) => {
-                    let length_typeid = parser.take::<u8>(length_typeid_width) == 1;
+                    let length_typeid = parser.take::<u8>(WIDTH_LENGTH_TYPEID) == 1;
                     match length_typeid {
                         false => {
-                            let total_length: usize = parser.take(total_length_width);
+                            let total_length: usize = parser.take(WIDTH_TOTAL_LENGTH);
 
                             let mut parsed_length = 0;
                             let mut packets: Vec<Packet> = Vec::new();
@@ -180,7 +181,7 @@ impl From<&mut Parser> for Packet {
                             Type::Operator(op, packets)
                         }
                         true => {
-                            let num_sub_pkt: u16 = parser.take(num_sub_pkt_width);
+                            let num_sub_pkt: u16 = parser.take(WIDTH_NUM_SUB_PKT);
                             let packets = (0..num_sub_pkt)
                                 .map(|_| Packet::from(&mut *parser))
                                 .collect::<Vec<Packet>>();
