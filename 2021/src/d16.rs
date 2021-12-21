@@ -210,6 +210,44 @@ impl Packet {
                 }
             }
     }
+
+    fn eval(&self) -> usize {
+        match &self.typ {
+            Type::Literal(v) => *v as usize,
+            Type::Operator(op, children) => {
+                match op {
+                    Op::Sum => children.iter().map(Packet::eval).sum(),
+                    Op::Product => children.iter().map(Packet::eval).product(),
+                    Op::Minimum => children.iter().map(Packet::eval).min().unwrap(),
+                    Op::Maximum => children.iter().map(Packet::eval).max().unwrap(),
+                    Op::GreaterThan => {
+                        assert!(children.len() == 2);
+                        if children[0].eval() > children[1].eval() {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    Op::LessThan => {
+                        assert!(children.len() == 2);
+                        if children[0].eval() < children[1].eval() {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    Op::EqualTo => {
+                        assert!(children.len() == 2);
+                        if children[0].eval() == children[1].eval() {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn p1(s: &str) -> usize {
@@ -218,8 +256,10 @@ fn p1(s: &str) -> usize {
     Packet::from(&mut parser).version_sum()
 }
 
-fn p2(input: &str) -> usize {
-    0
+fn p2(s: &str) -> usize {
+    let input = Input::from(s);
+    let mut parser = Parser::from(&input);
+    Packet::from(&mut parser).eval()
 }
 
 #[cfg(test)]
@@ -244,9 +284,15 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn p2() {
-        // assert_eq!(super::p2(INPUT), 2188189693529);
+        assert_eq!(super::p2("C200B40A82"), 3);
+        assert_eq!(super::p2("04005AC33890"), 54);
+        assert_eq!(super::p2("880086C3E88112"), 7);
+        assert_eq!(super::p2("CE00C43D881120"), 9);
+        assert_eq!(super::p2("D8005AC2A8F0"), 1);
+        assert_eq!(super::p2("F600BC2D8F"), 0);
+        assert_eq!(super::p2("9C005AC2F8F0"), 0);
+        assert_eq!(super::p2("9C0141080250320F1802104A08"), 1);
 
         let input = input(DAY);
         // assert_eq!(super::p2(&input), 4110215602456);
