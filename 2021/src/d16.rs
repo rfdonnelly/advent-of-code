@@ -2,9 +2,6 @@ use crate::input;
 
 use bitvec::prelude::*;
 use bitvec::mem::BitMemory;
-use itertools::Itertools;
-
-use std::fmt;
 
 const DAY: usize = 16;
 
@@ -81,14 +78,14 @@ impl Parser {
 #[derive(Debug, Clone)]
 enum TypeId {
     Literal,
-    Operator,
+    Operator(Op),
 }
 
 impl From<u8> for TypeId {
     fn from(typeid: u8) -> Self {
         match typeid {
             4 => Self::Literal,
-            _ => Self::Operator,
+            _ => Self::Operator(Op::from(typeid)),
         }
     }
 }
@@ -96,7 +93,34 @@ impl From<u8> for TypeId {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Type {
     Literal(u64),
-    Operator(Vec<Packet>),
+    Operator(Op, Vec<Packet>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Op {
+    Sum,
+    Product,
+    Minimum,
+    Maximum,
+    GreaterThan,
+    LessThan,
+    EqualTo,
+}
+
+impl From<u8> for Op {
+    fn from(opid: u8) -> Self {
+        match opid {
+            0 => Self::Sum,
+            1 => Self::Product,
+            2 => Self::Minimum,
+            3 => Self::Maximum,
+            4 => unreachable!(),
+            5 => Self::GreaterThan,
+            6 => Self::LessThan,
+            7 => Self::EqualTo,
+            _ => unreachable!(),
+        }
+    }
 }
 
 impl From<&mut Parser> for Packet {
@@ -108,7 +132,7 @@ impl From<&mut Parser> for Packet {
         let num_sub_pkt_width = 11;
 
         let version = parser.take(version_width);
-        let typeid: u8 = parser.take(typeid_width);
+        let typeid = parser.take::<u8>(typeid_width);
         let typeid = TypeId::from(typeid);
         let typ =
             match typeid {
@@ -135,7 +159,7 @@ impl From<&mut Parser> for Packet {
 
                     Type::Literal(literal)
                 }
-                TypeId::Operator => {
+                TypeId::Operator(op) => {
                     let length_typeid = parser.take::<u8>(length_typeid_width) == 1;
                     match length_typeid {
                         false => {
@@ -153,7 +177,7 @@ impl From<&mut Parser> for Packet {
                                 }
                             }
 
-                            Type::Operator(packets)
+                            Type::Operator(op, packets)
                         }
                         true => {
                             let num_sub_pkt: u16 = parser.take(num_sub_pkt_width);
@@ -161,7 +185,7 @@ impl From<&mut Parser> for Packet {
                                 .map(|_| Packet::from(&mut *parser))
                                 .collect::<Vec<Packet>>();
 
-                            Type::Operator(packets)
+                            Type::Operator(op, packets)
                         }
                     }
                 }
@@ -178,7 +202,7 @@ impl Packet {
         version +
             match &self.typ {
                 Type::Literal(_) => 0,
-                Type::Operator(children) => {
+                Type::Operator(_, children) => {
                     children
                         .iter()
                         .map(Packet::version_sum)
@@ -201,8 +225,6 @@ fn p2(input: &str) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use indoc::indoc;
 
     #[test]
     fn p1() {
