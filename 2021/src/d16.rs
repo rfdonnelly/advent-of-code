@@ -58,13 +58,13 @@ const WIDTH_TOTAL_LENGTH: usize = 15;
 const WIDTH_NUM_SUB_PKT: usize = 11;
 
 #[cfg(feature = "bitvec")]
-struct Parser {
+struct Bits {
     bits: BitVec<Msb0, u8>,
     index: usize,
 }
 
 #[cfg(feature = "bitvec")]
-impl From<&Input> for Parser {
+impl From<&Input> for Bits {
     fn from(input: &Input) -> Self {
         let bits = BitVec::<Msb0, _>::from_slice(&input.bytes).unwrap();
 
@@ -73,7 +73,7 @@ impl From<&Input> for Parser {
 }
 
 #[cfg(feature = "bitvec")]
-impl Parser {
+impl Bits {
     fn take<I>(&mut self, nbits: usize) -> I
     where
         I: BitMemory,
@@ -132,18 +132,18 @@ impl From<u8> for Op {
     }
 }
 
-impl From<&mut Parser> for Packet {
-    fn from(parser: &mut Parser) -> Self {
-        let version = parser.take(WIDTH_VERSION);
-        let typeid = parser.take::<u8>(WIDTH_TYPEID);
+impl From<&mut Bits> for Packet {
+    fn from(bits: &mut Bits) -> Self {
+        let version = bits.take(WIDTH_VERSION);
+        let typeid = bits.take::<u8>(WIDTH_TYPEID);
         let typeid = TypeId::from(typeid);
         let typ = match typeid {
             TypeId::Literal => {
                 let mut nibbles: Vec<u8> = Vec::new();
 
                 loop {
-                    let more = parser.take::<u8>(1) == 1;
-                    let nibble = parser.take(4);
+                    let more = bits.take::<u8>(1) == 1;
+                    let nibble = bits.take(4);
                     nibbles.push(nibble);
                     if !more {
                         break;
@@ -162,17 +162,17 @@ impl From<&mut Parser> for Packet {
                 Type::Literal(literal)
             }
             TypeId::Operator(op) => {
-                let length_typeid = parser.take::<u8>(WIDTH_LENGTH_TYPEID) == 1;
+                let length_typeid = bits.take::<u8>(WIDTH_LENGTH_TYPEID) == 1;
                 match length_typeid {
                     false => {
-                        let total_length: usize = parser.take(WIDTH_TOTAL_LENGTH);
+                        let total_length: usize = bits.take(WIDTH_TOTAL_LENGTH);
 
                         let mut parsed_length = 0;
                         let mut packets: Vec<Packet> = Vec::new();
                         loop {
-                            let index = parser.index;
-                            packets.push(Packet::from(&mut *parser));
-                            let packet_length = parser.index - index;
+                            let index = bits.index;
+                            packets.push(Packet::from(&mut *bits));
+                            let packet_length = bits.index - index;
                             parsed_length += packet_length;
                             if parsed_length == total_length {
                                 break;
@@ -182,9 +182,9 @@ impl From<&mut Parser> for Packet {
                         Type::Operator(op, packets)
                     }
                     true => {
-                        let num_sub_pkt: u16 = parser.take(WIDTH_NUM_SUB_PKT);
+                        let num_sub_pkt: u16 = bits.take(WIDTH_NUM_SUB_PKT);
                         let packets = (0..num_sub_pkt)
-                            .map(|_| Packet::from(&mut *parser))
+                            .map(|_| Packet::from(&mut *bits))
                             .collect::<Vec<Packet>>();
 
                         Type::Operator(op, packets)
@@ -256,14 +256,14 @@ where
 
 fn p1(s: &str) -> usize {
     let input = Input::from(s);
-    let mut parser = Parser::from(&input);
-    Packet::from(&mut parser).version_sum()
+    let mut bits = Bits::from(&input);
+    Packet::from(&mut bits).version_sum()
 }
 
 fn p2(s: &str) -> usize {
     let input = Input::from(s);
-    let mut parser = Parser::from(&input);
-    Packet::from(&mut parser).eval()
+    let mut bits = Bits::from(&input);
+    Packet::from(&mut bits).eval()
 }
 
 #[cfg(test)]
@@ -273,7 +273,7 @@ mod tests {
     #[test]
     fn p1() {
         assert_eq!(
-            Packet::from(&mut Parser::from(&Input::from("D2FE28"))),
+            Packet::from(&mut Bits::from(&Input::from("D2FE28"))),
             Packet {
                 version: 6,
                 typ: Type::Literal(2021),
