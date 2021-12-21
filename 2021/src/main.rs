@@ -17,6 +17,7 @@ mod d11;
 mod d12;
 mod d13;
 mod d14;
+mod d16;
 
 fn main() {
     let time = std::time::Instant::now();
@@ -36,6 +37,7 @@ fn main() {
         Box::new(d12::run),
         Box::new(d13::run),
         Box::new(d14::run),
+        Box::new(d16::run),
     ];
 
     let output = days.par_iter()
