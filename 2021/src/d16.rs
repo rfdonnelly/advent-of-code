@@ -216,14 +216,15 @@ impl Packet {
         match &self.typ {
             Type::Literal(v) => *v as usize,
             Type::Operator(op, children) => {
+                let children = children.iter().map(Packet::eval);
                 match op {
-                    Op::Sum => children.iter().map(Packet::eval).sum(),
-                    Op::Product => children.iter().map(Packet::eval).product(),
-                    Op::Minimum => children.iter().map(Packet::eval).min().unwrap(),
-                    Op::Maximum => children.iter().map(Packet::eval).max().unwrap(),
-                    Op::GreaterThan => children.iter().map(Packet::eval).greater_than() as usize,
-                    Op::LessThan => children.iter().map(Packet::eval).less_than() as usize,
-                    Op::EqualTo => children.iter().map(Packet::eval).equal_to() as usize,
+                    Op::Sum => children.sum(),
+                    Op::Product => children.product(),
+                    Op::Minimum => children.min().unwrap(),
+                    Op::Maximum => children.max().unwrap(),
+                    Op::GreaterThan => children.greater_than() as usize,
+                    Op::LessThan => children.less_than() as usize,
+                    Op::EqualTo => children.equal_to() as usize,
                 }
             }
         }
