@@ -220,33 +220,39 @@ impl Packet {
                     Op::Product => children.iter().map(Packet::eval).product(),
                     Op::Minimum => children.iter().map(Packet::eval).min().unwrap(),
                     Op::Maximum => children.iter().map(Packet::eval).max().unwrap(),
-                    Op::GreaterThan => {
-                        assert!(children.len() == 2);
-                        if children[0].eval() > children[1].eval() {
-                            1
-                        } else {
-                            0
-                        }
-                    }
-                    Op::LessThan => {
-                        assert!(children.len() == 2);
-                        if children[0].eval() < children[1].eval() {
-                            1
-                        } else {
-                            0
-                        }
-                    }
-                    Op::EqualTo => {
-                        assert!(children.len() == 2);
-                        if children[0].eval() == children[1].eval() {
-                            1
-                        } else {
-                            0
-                        }
-                    }
+                    Op::GreaterThan => children.iter().map(Packet::eval).greater_than() as usize,
+                    Op::LessThan => children.iter().map(Packet::eval).less_than() as usize,
+                    Op::EqualTo => children.iter().map(Packet::eval).equal_to() as usize,
                 }
             }
         }
+    }
+}
+
+pub trait ComparisonIteratorAdapter
+where
+    Self: Sized + Iterator,
+{
+    fn greater_than(self) -> bool;
+    fn less_than(self) -> bool;
+    fn equal_to(self) -> bool;
+}
+
+impl<I> ComparisonIteratorAdapter for I
+where
+    I: Iterator,
+    I::Item: PartialOrd + PartialEq,
+{
+    fn greater_than(mut self) -> bool {
+        self.next().unwrap() > self.next().unwrap()
+    }
+
+    fn less_than(mut self) -> bool {
+        self.next().unwrap() < self.next().unwrap()
+    }
+
+    fn equal_to(mut self) -> bool {
+        self.next().unwrap() == self.next().unwrap()
     }
 }
 
