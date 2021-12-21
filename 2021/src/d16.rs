@@ -171,26 +171,27 @@ impl From<&mut Parser> for Packet {
     }
 }
 
-fn version_sum(packet: &Packet) -> usize {
-    let version: usize = packet.version.into();
+impl Packet {
+    fn version_sum(&self) -> usize {
+        let version: usize = self.version.into();
 
-    version +
-        match &packet.typ {
-            Type::Literal(_) => 0,
-            Type::Operator(children) => {
-                children
-                    .iter()
-                    .map(|child| version_sum(child))
-                    .sum()
+        version +
+            match &self.typ {
+                Type::Literal(_) => 0,
+                Type::Operator(children) => {
+                    children
+                        .iter()
+                        .map(Packet::version_sum)
+                        .sum()
+                }
             }
-        }
+    }
 }
 
 fn p1(s: &str) -> usize {
     let input = Input::from(s);
     let mut parser = Parser::from(&input);
-    let packet = Packet::from(&mut parser);
-    version_sum(&packet)
+    Packet::from(&mut parser).version_sum()
 }
 
 fn p2(input: &str) -> usize {
