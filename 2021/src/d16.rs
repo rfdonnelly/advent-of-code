@@ -1,23 +1,14 @@
 use crate::input;
 
-#[cfg(feature = "bitvec")]
-use bitvec::{
-    mem::BitMemory,
-    prelude::*,
-};
-
 #[cfg(feature = "nom")]
-use nom::{
-    IResult,
-    bits::{
-        bits,
-        complete::{
-            take,
-            tag,
-        },
-    },
-    sequence::tuple,
-};
+mod d16_nom;
+#[cfg(feature = "nom")]
+use d16_nom::*;
+
+#[cfg(feature = "bitvec")]
+mod d16_bitvec;
+#[cfg(feature = "bitvec")]
+use d16_bitvec::*;
 
 const DAY: usize = 16;
 
@@ -70,33 +61,6 @@ const WIDTH_LENGTH_TYPEID: usize = 1;
 const WIDTH_TOTAL_LENGTH: usize = 15;
 const WIDTH_NUM_SUB_PKT: usize = 11;
 
-#[cfg(feature = "bitvec")]
-struct Bits {
-    bits: BitVec<Msb0, u8>,
-    index: usize,
-}
-
-#[cfg(feature = "bitvec")]
-impl From<&Input> for Bits {
-    fn from(input: &Input) -> Self {
-        let bits = BitVec::<Msb0, _>::from_slice(&input.bytes).unwrap();
-
-        Self { bits, index: 0 }
-    }
-}
-
-#[cfg(feature = "bitvec")]
-impl Bits {
-    fn take<I>(&mut self, nbits: usize) -> I
-    where
-        I: BitMemory,
-    {
-        let value = self.bits[self.index..(self.index + nbits)].load_be::<I>();
-        self.index += nbits;
-        value
-    }
-}
-
 #[derive(Debug, Clone)]
 enum TypeId {
     Literal,
@@ -142,168 +106,6 @@ impl From<u8> for Op {
             7 => Self::EqualTo,
             _ => unreachable!(),
         }
-    }
-}
-
-#[cfg(feature = "bitvec")]
-impl From<&mut Bits> for Packet {
-    fn from(bits: &mut Bits) -> Self {
-        let version = bits.take(WIDTH_VERSION);
-        let typeid = bits.take::<u8>(WIDTH_TYPEID);
-        let typeid = TypeId::from(typeid);
-        let typ = match typeid {
-            TypeId::Literal => {
-                let mut nibbles: Vec<u8> = Vec::new();
-
-                loop {
-                    let more = bits.take::<u8>(1) == 1;
-                    let nibble = bits.take(4);
-                    nibbles.push(nibble);
-                    if !more {
-                        break;
-                    }
-                }
-
-                let n_nibbles = nibbles.iter().count();
-                let literal = nibbles
-                    .iter()
-                    .enumerate()
-                    .fold(0u64, |literal, (i, nibble)| {
-                        let nibble_idx = n_nibbles - i - 1;
-                        literal | (*nibble as u64) << (4 * nibble_idx)
-                    });
-
-                Type::Literal(literal)
-            }
-            TypeId::Operator(op) => {
-                let length_typeid = bits.take::<u8>(WIDTH_LENGTH_TYPEID) == 1;
-                match length_typeid {
-                    false => {
-                        let total_length: usize = bits.take(WIDTH_TOTAL_LENGTH);
-
-                        let mut parsed_length = 0;
-                        let mut packets: Vec<Packet> = Vec::new();
-                        loop {
-                            let index = bits.index;
-                            packets.push(Packet::from(&mut *bits));
-                            let packet_length = bits.index - index;
-                            parsed_length += packet_length;
-                            if parsed_length == total_length {
-                                break;
-                            }
-                        }
-
-                        Type::Operator(op, packets)
-                    }
-                    true => {
-                        let num_sub_pkt: u16 = bits.take(WIDTH_NUM_SUB_PKT);
-                        let packets = (0..num_sub_pkt)
-                            .map(|_| Packet::from(&mut *bits))
-                            .collect::<Vec<Packet>>();
-
-                        Type::Operator(op, packets)
-                    }
-                }
-            }
-        };
-
-        Self { version, typ }
-    }
-}
-
-#[cfg(feature = "nom")]
-fn parse_bytes(i: &[u8]) -> IResult<&[u8], Packet> {
-    bits(parse_packet_bits)(i)
-}
-
-#[cfg(feature = "nom")]
-fn parse_packet_type_literal(i: (&[u8], usize)) -> IResult<(&[u8], usize), Type> {
-    let mut nibbles: Vec<u8> = Vec::new();
-
-    let mut i = i;
-    loop {
-        let (more, nibble): (u8, u8);
-        (i, (more, nibble)) = tuple((take(1usize), take(4usize)))(i)?;
-        nibbles.push(nibble);
-        let more = more == 1;
-        if !more {
-            break;
-        }
-    }
-
-    let n_nibbles = nibbles.iter().count();
-    let literal = nibbles
-        .iter()
-        .enumerate()
-        .fold(0u64, |literal, (i, nibble)| {
-            let nibble_idx = n_nibbles - i - 1;
-            literal | (*nibble as u64) << (4 * nibble_idx)
-        });
-
-    Ok((i, Type::Literal(literal)))
-}
-
-#[cfg(feature = "nom")]
-fn parse_packet_type_operator(i: (&[u8], usize), op: Op) -> IResult<(&[u8], usize), Type> {
-    let (i, length_typeid): (_, u16) = take(WIDTH_LENGTH_TYPEID)(i)?;
-    let length_typeid = length_typeid == 1;
-
-    match length_typeid {
-        false => {
-            let (i, total_length) = take(WIDTH_TOTAL_LENGTH)(i)?;
-
-            let mut parsed_length = 0;
-            let mut packets: Vec<Packet> = Vec::new();
-            let mut i = i;
-            loop {
-                let bit_remaining_before = 8 * i.0.len() - i.1;
-                let packet;
-                (i, packet) = parse_packet_bits(i)?;
-                packets.push(packet);
-                let bits_remaining_after = 8 * i.0.len() - i.1;
-                let packet_length = bit_remaining_before - bits_remaining_after;
-                parsed_length += packet_length;
-                if parsed_length == total_length {
-                    break;
-                }
-            }
-
-            Ok((i, Type::Operator(op, packets)))
-        }
-        true => {
-            let (i, num_sub_pkt): (_, u16) = take(WIDTH_NUM_SUB_PKT)(i)?;
-            let mut i = i;
-            let mut packets: Vec<Packet> = Vec::new();
-            for _ in 0..num_sub_pkt {
-                let packet;
-                (i, packet) = parse_packet_bits(i)?;
-                packets.push(packet);
-            }
-
-            Ok((i, Type::Operator(op, packets)))
-        }
-    }
-}
-
-#[cfg(feature = "nom")]
-fn parse_packet_bits(i: (&[u8], usize)) -> IResult<(&[u8], usize), Packet> {
-    let (i, version) = take(WIDTH_VERSION)(i)?;
-    let (i, typeid): (_, u8) = take(WIDTH_TYPEID)(i)?;
-    let typeid = TypeId::from(typeid);
-    let (i, typ) = match typeid {
-        TypeId::Literal => parse_packet_type_literal(i)?,
-        TypeId::Operator(op) => parse_packet_type_operator(i, op)?,
-    };
-
-    let packet = Packet { version, typ };
-    Ok((i, packet))
-}
-
-#[cfg(feature = "nom")]
-impl From<&[u8]> for Packet {
-    fn from(bytes: &[u8]) -> Self {
-        let (_, packet) = parse_bytes(bytes).unwrap();
-        packet
     }
 }
 
@@ -396,22 +198,6 @@ mod tests {
 
     #[test]
     fn p1() {
-        #[cfg(feature = "bitvec")]
-        assert_eq!(
-            Packet::from(&mut Bits::from(&Input::from("D2FE28"))),
-            Packet {
-                version: 6,
-                typ: Type::Literal(2021),
-            }
-        );
-        #[cfg(feature = "nom")]
-        assert_eq!(
-            Packet::from(Input::from("D2FE28").bytes.as_ref()),
-            Packet {
-                version: 6,
-                typ: Type::Literal(2021),
-            }
-        );
         assert_eq!(super::p1("8A004A801A8002F478"), 16);
         assert_eq!(super::p1("620080001611562C8802118E34"), 12);
         assert_eq!(super::p1("C0015000016115A2E0802F182340"), 23);
