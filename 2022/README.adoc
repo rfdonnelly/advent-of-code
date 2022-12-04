@@ -1,0 +1,4 @@
+= Advent of Code 2022
+
+This year I'm using https://github.com/gobanos/cargo-aoc[cargo-aoc].
+See it's documentation for how to test and run.
