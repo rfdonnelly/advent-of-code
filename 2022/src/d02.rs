@@ -77,10 +77,7 @@ impl FromStr for Round {
         let choice = chars.next().unwrap().into();
         chars.next().unwrap();
         let second = chars.next().unwrap();
-        Ok(Self(
-                choice,
-                second,
-        ))
+        Ok(Self(choice, second))
     }
 }
 
@@ -129,18 +126,12 @@ fn parse(input: &str) -> Input {
 
 #[aoc(day2, part1)]
 fn p1(input: &Input) -> u32 {
-    input
-        .iter()
-        .map(Round::score_p1)
-        .sum()
+    input.iter().map(Round::score_p1).sum()
 }
 
 #[aoc(day2, part2)]
 fn p2(input: &Input) -> u32 {
-    input
-        .iter()
-        .map(Round::score_p2)
-        .sum()
+    input.iter().map(Round::score_p2).sum()
 }
 
 #[cfg(test)]
@@ -156,11 +147,7 @@ mod test {
 
     #[test]
     fn test_parse() {
-        let expected = vec![
-            Round(Rock, 'Y'),
-            Round(Paper, 'X'),
-            Round(Scissors, 'Z'),
-        ];
+        let expected = vec![Round(Rock, 'Y'), Round(Paper, 'X'), Round(Scissors, 'Z')];
         assert_eq!(parse(INPUT), expected);
     }
 

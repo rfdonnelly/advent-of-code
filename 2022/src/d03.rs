@@ -51,10 +51,7 @@ type Input = Vec<Rucksack>;
 
 #[aoc_generator(day3)]
 fn parse(input: &str) -> Input {
-    input
-        .lines()
-        .map(Rucksack::from)
-        .collect()
+    input.lines().map(Rucksack::from).collect()
 }
 
 #[aoc(day3, part1)]
@@ -93,8 +90,7 @@ mod test {
     "};
 
     #[test]
-    fn test_parse() {
-    }
+    fn test_parse() {}
 
     #[test]
     fn test_p1() {
@@ -106,4 +102,3 @@ mod test {
         assert_eq!(p2(&parse(INPUT)), 70);
     }
 }
-
