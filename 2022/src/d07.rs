@@ -53,27 +53,31 @@ struct FileSystem {
     dirs: HashMap<String, Dir>,
 }
 
+fn format_path(path: &[String]) -> String {
+    format!("/{}", path.join("/"))
+}
+
 impl From<&[Line]> for FileSystem {
     fn from(lines: &[Line]) -> Self {
         let mut dirs: HashMap<String, Dir> = HashMap::new();
         let mut path = Vec::new();
-        let mut cur_dir = dirs.entry("".to_string()).or_default();
+        let mut cur_dir = dirs.entry(format_path(&path)).or_default();
 
         for line in lines {
             match line {
                 Line::Push { name } => {
                     path.push(name.clone());
-                    cur_dir = dirs.entry(path.join("/")).or_default();
-                    cur_dir.path = path.join("/");
+                    cur_dir = dirs.entry(format_path(&path)).or_default();
+                    cur_dir.path = format_path(&path);
                 }
                 Line::Pop => {
                     path.pop().unwrap();
-                    cur_dir = dirs.entry(path.join("/")).or_default();
+                    cur_dir = dirs.entry(format_path(&path)).or_default();
                 }
                 Line::Dir { name } => {
                     let mut path = path.clone();
                     path.push(name.to_string());
-                    cur_dir.dirs.push(path.join("/"));
+                    cur_dir.dirs.push(format_path(&path));
                 }
                 Line::File(file) => {
                     cur_dir.files.push(file.clone());
@@ -87,21 +91,27 @@ impl From<&[Line]> for FileSystem {
 }
 
 impl FileSystem {
-    fn size_recursive(&self, path: &str, size_map: &mut HashMap<String, usize>) -> usize {
+    fn size_recursive(&self, path: &str, sizes: &mut Vec<usize>) -> usize {
         let dir = self.dirs.get(path).unwrap();
         let files_size: usize = dir.files.iter().map(|file| file.size).sum();
         let dirs_size: usize = dir
             .dirs
             .iter()
             .map(|dir_path| {
-                self.size_recursive(dir_path, size_map)
+                self.size_recursive(dir_path, sizes)
             })
             .sum();
 
         let size = files_size + dirs_size;
-        size_map.insert(path.to_string(), size);
+        sizes.push(size);
 
         size
+    }
+
+    fn sizes(&self) -> (usize, Vec<usize>) {
+        let mut sizes = Vec::new();
+        let size = self.size_recursive("/", &mut sizes);
+        (size, sizes)
     }
 }
 
@@ -114,10 +124,8 @@ fn parse(input: &str) -> Input {
 
 #[aoc(day7, part1)]
 fn p1(input: &Input) -> usize {
-    let fs = FileSystem::from(input.as_slice());
-    let mut sizes = HashMap::new();
-    fs.size_recursive("", &mut sizes);
-    sizes.values().filter(|&&size| size <= 100000).sum()
+    let (_, sizes) = FileSystem::from(input.as_slice()).sizes();
+    sizes.iter().filter(|&&size| size <= 100000).sum()
 }
 
 #[aoc(day7, part2)]
@@ -125,11 +133,9 @@ fn p2(input: &Input) -> usize {
     const CAPACITY: usize = 70_000_000;
     const NEEDED_FREE_SPACE: usize = 30_000_000;
     const MAX_USED: usize = CAPACITY - NEEDED_FREE_SPACE;
-    let fs = FileSystem::from(input.as_slice());
-    let mut sizes = HashMap::new();
-    let total = fs.size_recursive("", &mut sizes);
-    let min_space_to_free = total - MAX_USED;
-    sizes.values().filter(|&&size| size >= min_space_to_free).copied().min().unwrap()
+    let (total_size, sizes) = FileSystem::from(input.as_slice()).sizes();
+    let min_space_to_free = total_size - MAX_USED;
+    sizes.iter().filter(|&&size| size >= min_space_to_free).copied().min().unwrap()
 }
 
 #[cfg(test)]
