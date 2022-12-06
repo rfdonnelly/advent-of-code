@@ -31,7 +31,6 @@ fn p2(input: &Input) -> usize {
 #[cfg(test)]
 mod test {
     use super::*;
-    use indoc::indoc;
 
     const INPUTS: [(&str, usize); 5] = [
         ("mjqjpqmgbljsphdztnvjfqwrcgsmlb", 7),
