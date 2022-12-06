@@ -1,15 +1,36 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use std::collections::HashSet;
 
 type Input = String;
+
+fn char_to_index(c: u8) -> usize {
+    let index = match c {
+        b'A'..=b'Z' => c - b'A',
+        b'a'..=b'z' => c - b'a' + 26,
+        _ => unimplemented!(),
+    };
+    index as usize
+}
+
+fn is_valid_marker(chars: &[u8]) -> bool {
+    let mut occurences: [bool; 52] = [false; 52];
+    for c in chars {
+        let index = char_to_index(*c);
+        if occurences[index] {
+            return false;
+        } else {
+            occurences[index] = true;
+        }
+    }
+    return true;
+}
 
 fn find_start_of_message(datastream: &str, marker_len: usize) -> usize {
     marker_len + datastream
         .as_bytes()
         .windows(marker_len)
-        .map(|seq| HashSet::<u8>::from_iter(seq.iter().copied()).len())
+        .map(is_valid_marker)
         .enumerate()
-        .find_map(|(i, len)| (len == marker_len).then_some(i))
+        .find_map(|(i, valid)| valid.then_some(i))
         .unwrap()
 }
 
