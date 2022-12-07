@@ -2,23 +2,19 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 type Input = String;
 
-fn char_to_index(c: u8) -> usize {
-    let index = match c {
-        b'A'..=b'Z' => c - b'A',
-        b'a'..=b'z' => c - b'a' + 26,
-        _ => unimplemented!(),
-    };
-    index as usize
+fn char_to_index(c: u8) -> u8 {
+    c - b'A'
 }
 
 fn is_valid_marker(chars: &[u8]) -> bool {
-    let mut occurences: [bool; 52] = [false; 52];
+    let mut occurences = 0u64;
     for c in chars {
         let index = char_to_index(*c);
-        if occurences[index] {
+        let mask = 1 << index;
+        if occurences & mask > 0 {
             return false;
         } else {
-            occurences[index] = true;
+            occurences |= mask;
         }
     }
     return true;
