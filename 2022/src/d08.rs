@@ -15,89 +15,65 @@ fn parse(input: &str) -> Input {
         .unwrap()
 }
 
-type Index = (usize, usize);
-fn is_visible(index: Index, input: &Input) -> bool {
-    is_visible_up(index, input)
-    || is_visible_down(index, input)
-    || is_visible_left(index, input)
-    || is_visible_right(index, input)
+type Position = (usize, usize);
+fn is_visible(from: Position, heights: &Input) -> bool {
+    is_edge(from, heights)
+    || is_visible_up(from, heights)
+    || is_visible_down(from, heights)
+    || is_visible_left(from, heights)
+    || is_visible_right(from, heights)
 }
 
-fn is_visible_up(index: (usize, usize), input: &Input) -> bool {
-    let (row_a, col_a) = index;
-    let height_a = input[index];
-    dbg!(row_a);
-    for row_b in (0..row_a).rev() {
-        let index_b = (row_b, col_a);
-        let height_b = input[index_b];
-        // println!("{index:?} {height_a} {index_b:?} {height_b}");
-        if height_b >= height_a {
-            return false;
-        }
-    }
-
-    return true;
+fn is_edge(position: Position, heights: &Input) -> bool {
+    let (row, col) = position;
+    row == 0
+    || col == 0
+    || row == heights.nrows() - 1
+    || col == heights.ncols() - 1
 }
 
-fn is_visible_down(index: (usize, usize), input: &Input) -> bool {
-    let (row_a, col_a) = index;
-    let height_a = input[index];
-    for row_b in row_a+1..input.nrows() {
-        let index_b = (row_b, col_a);
-        let height_b = input[index_b];
-        if height_b >= height_a {
-            return false;
-        }
-    }
-
-    return true;
+fn is_visible_up(from: Position, heights: &Input) -> bool {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (0..row).rev()
+        .map(|row_to| heights[(row_to, col)])
+        .find(|&height| height >= target_height)
+        .is_none()
 }
 
-fn is_visible_left(index: (usize, usize), input: &Input) -> bool {
-    let (row_a, col_a) = index;
-    let height_a = input[index];
-    for col_b in (0..col_a).rev() {
-        let index_b = (row_a, col_b);
-        let height_b = input[index_b];
-        if height_b >= height_a {
-            return false;
-        }
-    }
-
-    return true;
+fn is_visible_down(from: Position, heights: &Input) -> bool {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (row+1..heights.nrows())
+        .map(|row_to| heights[(row_to, col)])
+        .find(|&height| height >= target_height)
+        .is_none()
 }
 
-fn is_visible_right(index: (usize, usize), input: &Input) -> bool {
-    let (row_a, col_a) = index;
-    let height_a = input[index];
-    for col_b in col_a+1..input.ncols() {
-        let index_b = (row_a, col_b);
-        let height_b = input[index_b];
-        if height_b >= height_a {
-            return false;
-        }
-    }
+fn is_visible_left(from: Position, heights: &Input) -> bool {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (0..col).rev()
+        .map(|col_to| heights[(row, col_to)])
+        .find(|&height| height >= target_height)
+        .is_none()
+}
 
-    return true;
+fn is_visible_right(from: Position, heights: &Input) -> bool {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (col+1..heights.ncols())
+        .map(|col_to| heights[(row, col_to)])
+        .find(|&height| height >= target_height)
+        .is_none()
 }
 
 #[aoc(day8, part1)]
-fn p1(input: &Input) -> usize {
-    let (rows, cols) = input.dim();
-
-    let mut nvisible = 0;
-    for row in 1..rows-1 {
-        for col in 1..cols-1 {
-            if is_visible((row, col), input) {
-                nvisible += 1;
-            }
-        }
-    }
-
-    let edge_visible = (rows - 1) * 2 + (cols - 1) * 2;
-    let interior_visible = nvisible;
-
-    edge_visible + interior_visible
+fn p1(heights: &Input) -> usize {
+    heights
+        .indexed_iter()
+        .filter_map(|(position, _)| is_visible(position, heights).then_some(0))
+        .count()
 }
 
 #[aoc(day8, part2)]
