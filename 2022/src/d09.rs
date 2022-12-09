@@ -2,7 +2,6 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 use std::cell::Cell;
 use std::collections::HashSet;
-use std::fmt;
 use std::ops::Add;
 use std::ops::AddAssign;
 
@@ -124,10 +123,6 @@ impl State {
         Self { knots, visited }
     }
 
-    fn head(&self) -> Point {
-        *self.knots.first().unwrap()
-    }
-
     fn head_mut(&mut self) -> &mut Point {
         self.knots.first_mut().unwrap()
     }
@@ -155,33 +150,12 @@ impl State {
 
             // Record the tail position
             self.visited.insert(self.tail());
-            // println!("{self}");
         }
         self
     }
-}
 
-impl fmt::Display for State {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for y in (0..5).rev() {
-            for x in 0..6 {
-                let p = Point::new(x, y);
-                if p == self.head() {
-                    write!(f, "H")?;
-                } else if p == self.tail() {
-                    write!(f, "T")?;
-                } else if p == Default::default() {
-                    write!(f, "s")?;
-                } else if self.visited.contains(&p) {
-                    write!(f, "#")?;
-                } else {
-                    write!(f, ".")?;
-                }
-            }
-            write!(f, "\n")?;
-        }
-
-        Ok(())
+    fn visited(&self) -> usize {
+        self.visited.len()
     }
 }
 
@@ -197,8 +171,7 @@ fn p1(input: &Input) -> usize {
     input
         .iter()
         .fold(State::new(2), |state, instr| state.next(instr))
-        .visited
-        .len()
+        .visited()
 }
 
 #[aoc(day9, part2)]
@@ -206,8 +179,7 @@ fn p2(input: &Input) -> usize {
     input
         .iter()
         .fold(State::new(10), |state, instr| state.next(instr))
-        .visited
-        .len()
+        .visited()
 }
 
 #[cfg(test)]
