@@ -24,21 +24,27 @@ impl Instruction {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct State {
     x: i32,
     cycle: i32,
     cummulative_signal_strength: i32,
     pixel_x: i32,
+    frame_buffer: String,
 }
 
 impl State {
     fn new() -> Self {
+        let mut frame_buffer = String::with_capacity(41 * 6);
+        // Add a newline so it looks nice for `cargo aoc`
+        frame_buffer.push_str("\n");
+
         State {
             x: 1,
             cycle: 0,
             cummulative_signal_strength: 0,
             pixel_x: 0,
+            frame_buffer,
         }
     }
 
@@ -64,15 +70,15 @@ impl State {
 
     fn cycle(&mut self) {
         if self.pixel_x >= self.x - 1 && self.pixel_x <= self.x + 1 {
-            print!("#");
+            self.frame_buffer.push_str("#");
         } else {
-            print!(".");
+            self.frame_buffer.push_str(".");
         }
 
         self.cycle += 1;
         self.pixel_x = (self.pixel_x + 1) % 40;
         if self.pixel_x == 0 {
-            println!("");
+            self.frame_buffer.push_str("\n");
         }
 
         if self.is_sample_signal_strength_cycle() {
@@ -102,13 +108,13 @@ fn p1(input: &Input) -> i32 {
 }
 
 #[aoc(day10, part2)]
-fn p2(input: &Input) -> i32 {
+fn p2(input: &Input) -> String {
     input
         .iter()
         .fold(State::new(), |state, instr| {
             state.next(instr)
         })
-        .cummulative_signal_strength
+        .frame_buffer
 }
 
 #[cfg(test)]
@@ -117,12 +123,6 @@ mod test {
     use indoc::indoc;
 
     const INPUT: &str = indoc! {"
-        noop
-        addx 3
-        addx -5
-    "};
-
-    const INPUT_P1: &str = indoc! {"
         addx 15
         addx -11
         addx 6
@@ -276,10 +276,21 @@ mod test {
 
     #[test]
     fn test_p1() {
-        assert_eq!(p1(&parse(INPUT_P1)), 13140);
+        assert_eq!(p1(&parse(INPUT)), 13140);
     }
 
     #[test]
-    fn test_p2() {}
+    fn test_p2() {
+        let expected = indoc! {"
+
+            ##..##..##..##..##..##..##..##..##..##..
+            ###...###...###...###...###...###...###.
+            ####....####....####....####....####....
+            #####.....#####.....#####.....#####.....
+            ######......######......######......####
+            #######.......#######.......#######.....
+        "};
+        assert_eq!(p2(&parse(INPUT)), expected);
+    }
 }
 
