@@ -21,13 +21,14 @@ fn is_valid_marker(chars: &[u8]) -> bool {
 }
 
 fn find_start_of_message(datastream: &str, marker_len: usize) -> usize {
-    marker_len + datastream
-        .as_bytes()
-        .windows(marker_len)
-        .map(is_valid_marker)
-        .enumerate()
-        .find_map(|(i, valid)| valid.then_some(i))
-        .unwrap()
+    marker_len
+        + datastream
+            .as_bytes()
+            .windows(marker_len)
+            .map(is_valid_marker)
+            .enumerate()
+            .find_map(|(i, valid)| valid.then_some(i))
+            .unwrap()
 }
 
 #[aoc_generator(day6)]
@@ -58,18 +59,18 @@ mod test {
     ];
 
     #[test]
-    fn test_parse() {
-    }
+    fn test_parse() {}
 
     #[test]
     fn test_p1() {
-        let actual: Vec<_> = INPUTS.iter().map(|input| p1(&input.0.to_string())).collect();
+        let actual: Vec<_> = INPUTS
+            .iter()
+            .map(|input| p1(&input.0.to_string()))
+            .collect();
         let expected: Vec<_> = INPUTS.iter().map(|input| input.1).collect();
         assert_eq!(actual, expected);
     }
 
     #[test]
-    fn test_p2() {
-    }
+    fn test_p2() {}
 }
-

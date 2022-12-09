@@ -7,9 +7,7 @@ type Input = Array2<u32>;
 fn parse(input: &str) -> Input {
     let cols = input.lines().next().unwrap().len();
     let rows = input.lines().count();
-    let heights = input
-        .chars()
-        .filter_map(|c| c.to_digit(10));
+    let heights = input.chars().filter_map(|c| c.to_digit(10));
     ArrayBase::from_iter(heights)
         .into_shape((rows, cols))
         .unwrap()
@@ -19,24 +17,22 @@ type Position = (usize, usize);
 
 fn is_visible(from: Position, heights: &Input) -> bool {
     is_edge(from, heights)
-    || is_visible_up(from, heights)
-    || is_visible_down(from, heights)
-    || is_visible_left(from, heights)
-    || is_visible_right(from, heights)
+        || is_visible_up(from, heights)
+        || is_visible_down(from, heights)
+        || is_visible_left(from, heights)
+        || is_visible_right(from, heights)
 }
 
 fn is_edge(position: Position, heights: &Input) -> bool {
     let (row, col) = position;
-    row == 0
-    || col == 0
-    || row == heights.nrows() - 1
-    || col == heights.ncols() - 1
+    row == 0 || col == 0 || row == heights.nrows() - 1 || col == heights.ncols() - 1
 }
 
 fn is_visible_up(from: Position, heights: &Input) -> bool {
     let (row, col) = from;
     let target_height = heights[from];
-    (0..row).rev()
+    (0..row)
+        .rev()
         .map(|row_to| heights[(row_to, col)])
         .find(|&height| height >= target_height)
         .is_none()
@@ -45,7 +41,7 @@ fn is_visible_up(from: Position, heights: &Input) -> bool {
 fn is_visible_down(from: Position, heights: &Input) -> bool {
     let (row, col) = from;
     let target_height = heights[from];
-    (row+1..heights.nrows())
+    (row + 1..heights.nrows())
         .map(|row_to| heights[(row_to, col)])
         .find(|&height| height >= target_height)
         .is_none()
@@ -54,7 +50,8 @@ fn is_visible_down(from: Position, heights: &Input) -> bool {
 fn is_visible_left(from: Position, heights: &Input) -> bool {
     let (row, col) = from;
     let target_height = heights[from];
-    (0..col).rev()
+    (0..col)
+        .rev()
         .map(|col_to| heights[(row, col_to)])
         .find(|&height| height >= target_height)
         .is_none()
@@ -63,7 +60,7 @@ fn is_visible_left(from: Position, heights: &Input) -> bool {
 fn is_visible_right(from: Position, heights: &Input) -> bool {
     let (row, col) = from;
     let target_height = heights[from];
-    (col+1..heights.ncols())
+    (col + 1..heights.ncols())
         .map(|col_to| heights[(row, col_to)])
         .find(|&height| height >= target_height)
         .is_none()
@@ -71,48 +68,50 @@ fn is_visible_right(from: Position, heights: &Input) -> bool {
 
 fn scenic_score(from: Position, heights: &Input) -> usize {
     scenic_score_up(from, heights)
-    * scenic_score_down(from, heights)
-    * scenic_score_left(from, heights)
-    * scenic_score_right(from, heights)
+        * scenic_score_down(from, heights)
+        * scenic_score_left(from, heights)
+        * scenic_score_right(from, heights)
 }
 
 fn scenic_score_up(from: Position, heights: &Input) -> usize {
     let (row, col) = from;
     let target_height = heights[from];
-    (0..row).rev()
+    (0..row)
+        .rev()
         .map(|row_to| heights[(row_to, col)])
         .enumerate()
-        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .find_map(|(i, height)| (height >= target_height).then_some(i + 1))
         .unwrap_or(row)
 }
 
 fn scenic_score_down(from: Position, heights: &Input) -> usize {
     let (row, col) = from;
     let target_height = heights[from];
-    (row+1..heights.nrows())
+    (row + 1..heights.nrows())
         .map(|row_to| heights[(row_to, col)])
         .enumerate()
-        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .find_map(|(i, height)| (height >= target_height).then_some(i + 1))
         .unwrap_or(heights.nrows() - row - 1)
 }
 
 fn scenic_score_left(from: Position, heights: &Input) -> usize {
     let (row, col) = from;
     let target_height = heights[from];
-    (0..col).rev()
+    (0..col)
+        .rev()
         .map(|col_to| heights[(row, col_to)])
         .enumerate()
-        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .find_map(|(i, height)| (height >= target_height).then_some(i + 1))
         .unwrap_or(col)
 }
 
 fn scenic_score_right(from: Position, heights: &Input) -> usize {
     let (row, col) = from;
     let target_height = heights[from];
-    (col+1..heights.ncols())
+    (col + 1..heights.ncols())
         .map(|col_to| heights[(row, col_to)])
         .enumerate()
-        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .find_map(|(i, height)| (height >= target_height).then_some(i + 1))
         .unwrap_or(heights.ncols() - col - 1)
 }
 
@@ -169,4 +168,3 @@ mod test {
         assert_eq!(p2(&parse(INPUT)), 8);
     }
 }
-

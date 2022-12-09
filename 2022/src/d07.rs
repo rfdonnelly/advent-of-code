@@ -7,7 +7,7 @@ enum Line {
     Push { name: String },
     Pop,
     Dir { name: String },
-    File(File)
+    File(File),
 }
 
 impl From<&str> for Line {
@@ -17,9 +17,16 @@ impl From<&str> for Line {
             ["$", "ls"] => Line::Nop,
             ["$", "cd", "/"] => Line::Nop,
             ["$", "cd", ".."] => Line::Pop,
-            ["$", "cd", name] => Line::Push { name: name.to_string() },
-            ["dir", name] => Line::Dir { name: name.to_string() },
-            [size, name] => Line::File(File { name: name.to_string(), size: size.parse().unwrap() }),
+            ["$", "cd", name] => Line::Push {
+                name: name.to_string(),
+            },
+            ["dir", name] => Line::Dir {
+                name: name.to_string(),
+            },
+            [size, name] => Line::File(File {
+                name: name.to_string(),
+                size: size.parse().unwrap(),
+            }),
             _ => unimplemented!(),
         }
     }
@@ -28,7 +35,7 @@ impl From<&str> for Line {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct File {
     name: String,
-    size: usize
+    size: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -97,9 +104,7 @@ impl FileSystem {
         let dirs_size: usize = dir
             .dirs
             .iter()
-            .map(|dir_path| {
-                self.size_recursive(dir_path, sizes)
-            })
+            .map(|dir_path| self.size_recursive(dir_path, sizes))
             .sum();
 
         let size = files_size + dirs_size;
@@ -135,7 +140,12 @@ fn p2(input: &Input) -> usize {
     const MAX_USED: usize = CAPACITY - NEEDED_FREE_SPACE;
     let (total_size, sizes) = FileSystem::from(input.as_slice()).sizes();
     let min_space_to_free = total_size - MAX_USED;
-    sizes.iter().filter(|&&size| size >= min_space_to_free).copied().min().unwrap()
+    sizes
+        .iter()
+        .filter(|&&size| size >= min_space_to_free)
+        .copied()
+        .min()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -174,27 +184,69 @@ mod test {
         let expected = vec![
             Line::Nop,
             Line::Nop,
-            Line::Dir { name: "a".to_string() },
-            Line::File(File { name: "b.txt".to_string(), size: 14848514 }),
-            Line::File(File { name: "c.dat".to_string(), size: 8504156 }),
-            Line::Dir { name: "d".to_string() },
-            Line::Push { name: "a".to_string() },
+            Line::Dir {
+                name: "a".to_string(),
+            },
+            Line::File(File {
+                name: "b.txt".to_string(),
+                size: 14848514,
+            }),
+            Line::File(File {
+                name: "c.dat".to_string(),
+                size: 8504156,
+            }),
+            Line::Dir {
+                name: "d".to_string(),
+            },
+            Line::Push {
+                name: "a".to_string(),
+            },
             Line::Nop,
-            Line::Dir { name: "e".to_string() },
-            Line::File(File { name: "f".to_string(), size: 29116 }),
-            Line::File(File { name: "g".to_string(), size: 2557 }),
-            Line::File(File { name: "h.lst".to_string(), size: 62596 }),
-            Line::Push { name: "e".to_string() },
+            Line::Dir {
+                name: "e".to_string(),
+            },
+            Line::File(File {
+                name: "f".to_string(),
+                size: 29116,
+            }),
+            Line::File(File {
+                name: "g".to_string(),
+                size: 2557,
+            }),
+            Line::File(File {
+                name: "h.lst".to_string(),
+                size: 62596,
+            }),
+            Line::Push {
+                name: "e".to_string(),
+            },
             Line::Nop,
-            Line::File(File { name: "i".to_string(), size: 584 }),
+            Line::File(File {
+                name: "i".to_string(),
+                size: 584,
+            }),
             Line::Pop,
             Line::Pop,
-            Line::Push { name: "d".to_string() },
+            Line::Push {
+                name: "d".to_string(),
+            },
             Line::Nop,
-            Line::File(File { name: "j".to_string(), size: 4060174 }),
-            Line::File(File { name: "d.log".to_string(), size: 8033020 }),
-            Line::File(File { name: "d.ext".to_string(), size: 5626152 }),
-            Line::File(File { name: "k".to_string(), size: 7214296 }),
+            Line::File(File {
+                name: "j".to_string(),
+                size: 4060174,
+            }),
+            Line::File(File {
+                name: "d.log".to_string(),
+                size: 8033020,
+            }),
+            Line::File(File {
+                name: "d.ext".to_string(),
+                size: 5626152,
+            }),
+            Line::File(File {
+                name: "k".to_string(),
+                size: 7214296,
+            }),
         ];
         assert_eq!(parse(INPUT), expected);
     }

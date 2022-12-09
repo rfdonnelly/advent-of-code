@@ -18,8 +18,7 @@ impl Range {
     }
 
     fn overlaps(&self, rhs: Self) -> bool {
-        (rhs.0 >= self.0 && rhs.0 <= self.1)
-            || (rhs.1 >= self.0 && rhs.1 <= self.1)
+        (rhs.0 >= self.0 && rhs.0 <= self.1) || (rhs.1 >= self.0 && rhs.1 <= self.1)
     }
 }
 

@@ -104,7 +104,10 @@ impl From<&str> for Instruction {
         let mut tokens = s.split_ascii_whitespace();
         let direction = Direction::from(tokens.next().unwrap());
         let magnitude = tokens.next().unwrap().parse().unwrap();
-        Self { direction, magnitude }
+        Self {
+            direction,
+            magnitude,
+        }
     }
 }
 
@@ -195,9 +198,7 @@ fn parse(input: &str) -> Input {
 fn p1(input: &Input) -> usize {
     input
         .iter()
-        .fold(State::new(2), |state, &instr| {
-            state.next(instr)
-        })
+        .fold(State::new(2), |state, &instr| state.next(instr))
         .visited
         .len()
 }
@@ -206,9 +207,7 @@ fn p1(input: &Input) -> usize {
 fn p2(input: &Input) -> usize {
     input
         .iter()
-        .fold(State::new(10), |state, &instr| {
-            state.next(instr)
-        })
+        .fold(State::new(10), |state, &instr| state.next(instr))
         .visited
         .len()
 }
@@ -241,8 +240,7 @@ mod test {
     "};
 
     #[test]
-    fn test_parse() {
-    }
+    fn test_parse() {}
 
     #[test]
     fn test_p1() {
@@ -254,4 +252,3 @@ mod test {
         assert_eq!(p2(&parse(INPUT_LARGER)), 36);
     }
 }
-

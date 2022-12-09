@@ -31,7 +31,10 @@ impl From<&str> for Stacks {
         let cols = (s.lines().next().unwrap().len() + 1) / 4;
         let mut stacks = vec![Vec::new(); cols];
         for line in s.lines() {
-            for (i, c) in line.char_indices().filter(|(_i, c)| c.is_ascii_alphabetic()) {
+            for (i, c) in line
+                .char_indices()
+                .filter(|(_i, c)| c.is_ascii_alphabetic())
+            {
                 let col_index = (i + 2) / 4;
                 stacks[col_index].push(c);
             }
@@ -65,8 +68,11 @@ impl Problem {
     fn execute_p2(mut self) -> Self {
         for move_ in &self.moves {
             let len = self.stacks.0[move_.from].len();
-            let new_len = len-move_.count;
-            let slice: Vec<char> = self.stacks.0[move_.from][new_len..len].iter().cloned().collect();
+            let new_len = len - move_.count;
+            let slice: Vec<char> = self.stacks.0[move_.from][new_len..len]
+                .iter()
+                .cloned()
+                .collect();
             self.stacks.0[move_.to].extend_from_slice(&slice);
             self.stacks.0[move_.from].truncate(new_len);
         }
@@ -121,17 +127,29 @@ mod test {
     #[test]
     fn test_parse() {
         let expected = Problem {
-            stacks: Stacks(vec![
-                           vec!['Z', 'N'],
-                           vec!['M', 'C', 'D'],
-                           vec!['P'],
-            ]),
+            stacks: Stacks(vec![vec!['Z', 'N'], vec!['M', 'C', 'D'], vec!['P']]),
             moves: vec![
-                Move { count: 1, from: 1, to: 0},
-                Move { count: 3, from: 0, to: 2},
-                Move { count: 2, from: 1, to: 0},
-                Move { count: 1, from: 0, to: 1},
-            ]
+                Move {
+                    count: 1,
+                    from: 1,
+                    to: 0,
+                },
+                Move {
+                    count: 3,
+                    from: 0,
+                    to: 2,
+                },
+                Move {
+                    count: 2,
+                    from: 1,
+                    to: 0,
+                },
+                Move {
+                    count: 1,
+                    from: 0,
+                    to: 1,
+                },
+            ],
         };
         assert_eq!(parse(INPUT), expected);
     }
@@ -146,4 +164,3 @@ mod test {
         assert_eq!(p2(&parse(INPUT)), "MCD");
     }
 }
-
