@@ -16,6 +16,7 @@ fn parse(input: &str) -> Input {
 }
 
 type Position = (usize, usize);
+
 fn is_visible(from: Position, heights: &Input) -> bool {
     is_edge(from, heights)
     || is_visible_up(from, heights)
@@ -68,6 +69,53 @@ fn is_visible_right(from: Position, heights: &Input) -> bool {
         .is_none()
 }
 
+fn scenic_score(from: Position, heights: &Input) -> usize {
+    scenic_score_up(from, heights)
+    * scenic_score_down(from, heights)
+    * scenic_score_left(from, heights)
+    * scenic_score_right(from, heights)
+}
+
+fn scenic_score_up(from: Position, heights: &Input) -> usize {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (0..row).rev()
+        .map(|row_to| heights[(row_to, col)])
+        .enumerate()
+        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .unwrap_or(row)
+}
+
+fn scenic_score_down(from: Position, heights: &Input) -> usize {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (row+1..heights.nrows())
+        .map(|row_to| heights[(row_to, col)])
+        .enumerate()
+        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .unwrap_or(heights.nrows() - row - 1)
+}
+
+fn scenic_score_left(from: Position, heights: &Input) -> usize {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (0..col).rev()
+        .map(|col_to| heights[(row, col_to)])
+        .enumerate()
+        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .unwrap_or(col)
+}
+
+fn scenic_score_right(from: Position, heights: &Input) -> usize {
+    let (row, col) = from;
+    let target_height = heights[from];
+    (col+1..heights.ncols())
+        .map(|col_to| heights[(row, col_to)])
+        .enumerate()
+        .find_map(|(i, height)| (height >= target_height).then_some(i+1))
+        .unwrap_or(heights.ncols() - col - 1)
+}
+
 #[aoc(day8, part1)]
 fn p1(heights: &Input) -> usize {
     heights
@@ -77,8 +125,12 @@ fn p1(heights: &Input) -> usize {
 }
 
 #[aoc(day8, part2)]
-fn p2(input: &Input) -> u32 {
-    0
+fn p2(heights: &Input) -> usize {
+    heights
+        .indexed_iter()
+        .map(|(position, _)| scenic_score(position, heights))
+        .max()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -114,7 +166,7 @@ mod test {
 
     #[test]
     fn test_p2() {
-        assert_eq!(p2(&parse(INPUT)), 12);
+        assert_eq!(p2(&parse(INPUT)), 8);
     }
 }
 
