@@ -149,7 +149,7 @@ impl State {
                 .windows(2)
                 .for_each(|window| {
                     if let [a, b] = window {
-                        b.replace(b.get().move_toward(a.get()));
+                        b.set(b.get().move_toward(a.get()));
                     } else {
                         unreachable!();
                     }
