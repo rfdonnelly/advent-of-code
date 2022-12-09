@@ -19,15 +19,19 @@ impl Point {
         Self { x, y }
     }
 
-    fn move_toward(&mut self, dest: Point) {
+    fn move_toward(&self, dest: Point) -> Point {
         let x_diff = dest.x - self.x;
         let y_diff = dest.y - self.y;
         let touching = x_diff.abs() <= 1 && y_diff.abs() <= 1;
         if touching {
-            return;
+            *self
         } else {
-            if x_diff != 0 { self.x += x_diff / x_diff.abs(); }
-            if y_diff != 0 { self.y += y_diff / y_diff.abs(); }
+            let delta = Point {
+                x: x_diff.checked_div(x_diff.abs()).unwrap_or_default(),
+                y: y_diff.checked_div(y_diff.abs()).unwrap_or_default(),
+            };
+
+            *self + delta
         }
     }
 }
@@ -123,25 +127,32 @@ impl State {
         *self.knots.first().unwrap()
     }
 
+    fn head_mut(&mut self) -> &mut Point {
+        self.knots.first_mut().unwrap()
+    }
+
     fn tail(&self) -> Point {
         *self.knots.last().unwrap()
     }
 
     fn next(mut self, instr: Instruction) -> Self {
         for _ in 0..instr.magnitude {
-            let head = self.knots.first_mut().unwrap();
-            *head += instr.direction.into();
+            // Move the head knot
+            *self.head_mut() += instr.direction.into();
 
-            let cell_slice = Cell::from_mut(&mut self.knots[..]);
-            let knots = cell_slice.as_slice_of_cells();
-            for window in knots.windows(2) {
-                if let [a, b] = window {
-                    let mut new_b = b.get();
-                    new_b.move_toward(a.get());
-                    b.replace(new_b);
-                }
-            }
+            // Move the rest of the knots
+            Cell::from_mut(&mut self.knots[..])
+                .as_slice_of_cells()
+                .windows(2)
+                .for_each(|window| {
+                    if let [a, b] = window {
+                        b.replace(b.get().move_toward(a.get()));
+                    } else {
+                        unreachable!();
+                    }
+                });
 
+            // Record the tail position
             self.visited.insert(self.tail());
             // println!("{self}");
         }
