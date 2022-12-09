@@ -101,12 +101,10 @@ struct Instruction {
 
 impl From<&str> for Instruction {
     fn from(s: &str) -> Self {
-        let mut tokens = s.split_ascii_whitespace();
-        let direction = Direction::from(tokens.next().unwrap());
-        let magnitude = tokens.next().unwrap().parse().unwrap();
+        let (direction, magnitude) = s.split_once(' ').unwrap();
         Self {
-            direction,
-            magnitude,
+            direction: Direction::from(direction),
+            magnitude: magnitude.parse().unwrap(),
         }
     }
 }
@@ -138,7 +136,7 @@ impl State {
         *self.knots.last().unwrap()
     }
 
-    fn next(mut self, instr: Instruction) -> Self {
+    fn next(mut self, instr: &Instruction) -> Self {
         for _ in 0..instr.magnitude {
             // Move the head knot
             *self.head_mut() += instr.direction.into();
@@ -198,7 +196,7 @@ fn parse(input: &str) -> Input {
 fn p1(input: &Input) -> usize {
     input
         .iter()
-        .fold(State::new(2), |state, &instr| state.next(instr))
+        .fold(State::new(2), |state, instr| state.next(instr))
         .visited
         .len()
 }
@@ -207,7 +205,7 @@ fn p1(input: &Input) -> usize {
 fn p2(input: &Input) -> usize {
     input
         .iter()
-        .fold(State::new(10), |state, &instr| state.next(instr))
+        .fold(State::new(10), |state, instr| state.next(instr))
         .visited
         .len()
 }
