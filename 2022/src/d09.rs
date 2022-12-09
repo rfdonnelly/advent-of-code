@@ -18,26 +18,29 @@ impl Point {
         Self { x, y }
     }
 
-    fn move_toward(&self, dest: Point) -> Point {
+    fn move_toward(&self, dest: Self) -> Self {
         let x_diff = dest.x - self.x;
         let y_diff = dest.y - self.y;
         let touching = x_diff.abs() <= 1 && y_diff.abs() <= 1;
         if touching {
             *self
         } else {
-            let delta = Point {
-                x: x_diff.checked_div(x_diff.abs()).unwrap_or_default(),
-                y: y_diff.checked_div(y_diff.abs()).unwrap_or_default(),
-            };
-
+            let delta = Point::new(x_diff, y_diff).unit_vector();
             *self + delta
+        }
+    }
+
+    fn unit_vector(&self) -> Self {
+        Self {
+            x: self.x.checked_div(self.x.abs()).unwrap_or_default(),
+            y: self.y.checked_div(self.y.abs()).unwrap_or_default(),
         }
     }
 }
 
 impl Default for Point {
     fn default() -> Self {
-        Point::new(0, 0)
+        Self::new(0, 0)
     }
 }
 
@@ -64,10 +67,10 @@ impl AddAssign for Point {
 impl From<Direction> for Point {
     fn from(d: Direction) -> Self {
         match d {
-            Up => Point { x: 0, y: 1 },
-            Down => Point { x: 0, y: -1 },
-            Left => Point { x: -1, y: 0 },
-            Right => Point { x: 1, y: 0 },
+            Up => Self { x: 0, y: 1 },
+            Down => Self { x: 0, y: -1 },
+            Left => Self { x: -1, y: 0 },
+            Right => Self { x: 1, y: 0 },
         }
     }
 }
