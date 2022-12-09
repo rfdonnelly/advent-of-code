@@ -29,6 +29,7 @@ struct State {
     x: i32,
     cycle: i32,
     cummulative_signal_strength: i32,
+    pixel_x: i32,
 }
 
 impl State {
@@ -37,6 +38,7 @@ impl State {
             x: 1,
             cycle: 0,
             cummulative_signal_strength: 0,
+            pixel_x: 0,
         }
     }
 
@@ -61,7 +63,17 @@ impl State {
     }
 
     fn cycle(&mut self) {
+        if self.pixel_x >= self.x - 1 && self.pixel_x <= self.x + 1 {
+            print!("#");
+        } else {
+            print!(".");
+        }
+
         self.cycle += 1;
+        self.pixel_x = (self.pixel_x + 1) % 40;
+        if self.pixel_x == 0 {
+            println!("");
+        }
 
         if self.is_sample_signal_strength_cycle() {
             self.cummulative_signal_strength += self.signal_strength();
@@ -90,8 +102,13 @@ fn p1(input: &Input) -> i32 {
 }
 
 #[aoc(day10, part2)]
-fn p2(input: &Input) -> u32 {
-    0
+fn p2(input: &Input) -> i32 {
+    input
+        .iter()
+        .fold(State::new(), |state, instr| {
+            state.next(instr)
+        })
+        .cummulative_signal_strength
 }
 
 #[cfg(test)]
@@ -263,8 +280,6 @@ mod test {
     }
 
     #[test]
-    fn test_p2() {
-        assert_eq!(p2(&parse(INPUT)), 12);
-    }
+    fn test_p2() {}
 }
 
