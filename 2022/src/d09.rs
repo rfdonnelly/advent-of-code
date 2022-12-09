@@ -1,5 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
+use std::cell::Cell;
 use std::collections::HashSet;
 use std::fmt;
 use std::ops::Add;
@@ -105,27 +106,43 @@ impl From<&str> for Instruction {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct State {
-    head: Point,
-    tail: Point,
+    knots: Vec<Point>,
     visited: HashSet<Point>,
 }
 
 impl State {
-    fn new() -> Self {
+    fn new(size: usize) -> Self {
+        assert!(size >= 2);
         let initial = Default::default();
+        let knots = vec![initial; size];
         let visited = HashSet::from([initial]);
-        Self {
-            head: initial,
-            tail: initial,
-            visited
-        }
+        Self { knots, visited }
+    }
+
+    fn head(&self) -> Point {
+        *self.knots.first().unwrap()
+    }
+
+    fn tail(&self) -> Point {
+        *self.knots.last().unwrap()
     }
 
     fn next(mut self, instr: Instruction) -> Self {
         for _ in 0..instr.magnitude {
-            self.head += instr.direction.into();
-            self.tail.move_toward(self.head);
-            self.visited.insert(self.tail);
+            let head = self.knots.first_mut().unwrap();
+            *head += instr.direction.into();
+
+            let cell_slice = Cell::from_mut(&mut self.knots[..]);
+            let knots = cell_slice.as_slice_of_cells();
+            for window in knots.windows(2) {
+                if let [a, b] = window {
+                    let mut new_b = b.get();
+                    new_b.move_toward(a.get());
+                    b.replace(new_b);
+                }
+            }
+
+            self.visited.insert(self.tail());
             // println!("{self}");
         }
         self
@@ -137,9 +154,9 @@ impl fmt::Display for State {
         for y in (0..5).rev() {
             for x in 0..6 {
                 let p = Point::new(x, y);
-                if p == self.head {
+                if p == self.head() {
                     write!(f, "H")?;
-                } else if p == self.tail {
+                } else if p == self.tail() {
                     write!(f, "T")?;
                 } else if p == Default::default() {
                     write!(f, "s")?;
@@ -167,7 +184,7 @@ fn parse(input: &str) -> Input {
 fn p1(input: &Input) -> usize {
     input
         .iter()
-        .fold(State::new(), |state, &instr| {
+        .fold(State::new(2), |state, &instr| {
             state.next(instr)
         })
         .visited
@@ -175,8 +192,14 @@ fn p1(input: &Input) -> usize {
 }
 
 #[aoc(day9, part2)]
-fn p2(input: &Input) -> u32 {
-    0
+fn p2(input: &Input) -> usize {
+    input
+        .iter()
+        .fold(State::new(10), |state, &instr| {
+            state.next(instr)
+        })
+        .visited
+        .len()
 }
 
 #[cfg(test)]
@@ -195,6 +218,17 @@ mod test {
         R 2
     "};
 
+    const INPUT_LARGER: &str = indoc! {"
+        R 5
+        U 8
+        L 8
+        D 3
+        R 17
+        D 10
+        L 25
+        U 20
+    "};
+
     #[test]
     fn test_parse() {
     }
@@ -206,7 +240,7 @@ mod test {
 
     #[test]
     fn test_p2() {
-        assert_eq!(p2(&parse(INPUT)), 36);
+        assert_eq!(p2(&parse(INPUT_LARGER)), 36);
     }
 }
 
