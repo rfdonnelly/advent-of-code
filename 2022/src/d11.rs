@@ -58,12 +58,22 @@ fn worry_level(old: u64, op: Op, operand: Operand) -> u64 {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum Part {
+    P1,
+    P2(u64),
+}
+
 impl Monkey {
-    fn inspect(&mut self) -> Option<(u64, usize)> {
+    fn inspect(&mut self, part: Part) -> Option<(u64, usize)> {
         match self.items.pop_front() {
             Some(old) => {
                 self.inspected += 1;
-                let new = worry_level(old, self.op, self.operand) / 3;
+                let new = worry_level(old, self.op, self.operand);
+                let new = match part {
+                    Part::P1 => new / 3,
+                    Part::P2(lcm) => new % lcm,
+                };
                 if new % self.test_div == 0 {
                     Some((new, self.test_true))
                 } else {
@@ -126,11 +136,11 @@ impl State {
         Self { monkeys }
     }
 
-    fn next(self) -> Self {
+    fn next(self, part: Part) -> Self {
         self.monkeys
             .iter()
             .for_each(|monkey| {
-                while let Some((item, monkey_idx)) = monkey.borrow_mut().inspect() {
+                while let Some((item, monkey_idx)) = monkey.borrow_mut().inspect(part) {
                     self.monkeys[monkey_idx].borrow_mut().items.push_back(item);
                 }
             });
@@ -149,31 +159,34 @@ fn parse(input: &str) -> Input {
         .collect()
 }
 
-#[aoc(day11, part1)]
-fn p1(input: &Input) -> u64 {
+fn p(input: &Input, nrounds: u32, part: Part) -> u64 {
     let initial_state = State::new(input);
 
-    (0..20)
+    (0..nrounds)
         .fold(initial_state, |state, _| {
-            state.next()
+            state.next(part)
         })
         .monkeys
         .into_iter()
         .map(RefCell::into_inner)
         .map(Monkey::inspected)
         .collect::<Vec<_>>()
-        .tap(|vec| {dbg!(&vec); ()})
         .tap_mut(|vec| vec.sort())
         .tap_mut(|vec| vec.reverse())[0..2]
-        .tap(|vec| {dbg!(&vec); ()})
         .iter()
         .copied()
         .product()
 }
 
+#[aoc(day11, part1)]
+fn p1(input: &Input) -> u64 {
+    p(input, 20, Part::P1)
+}
+
 #[aoc(day11, part2)]
 fn p2(input: &Input) -> u64 {
-    0
+    let lcm = input.iter().map(|m| m.test_div).product();
+    p(input, 10000, Part::P2(lcm))
 }
 
 #[cfg(test)]
@@ -234,6 +247,6 @@ mod test {
 
     #[test]
     fn test_p2() {
-        assert_eq!(p2(&parse(INPUT)), 12);
+        assert_eq!(p2(&parse(INPUT)), 2713310158);
     }
 }
