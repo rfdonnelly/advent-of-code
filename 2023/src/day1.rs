@@ -44,23 +44,21 @@ fn parse_p2(input: &str) -> Vec<u32> {
     input
         .lines()
         .map(|line| {
-            let digits = strs
+            let first_str = strs
                 .iter()
                 .filter_map(|s| line.find(s).map(|i| (s, i)))
-                // NOTE: find only returns first occurrence.
-                // To account for subsequent occurrences, add rfind results too
-                .chain(
-                    strs.iter()
-                    .filter_map(|s| line.rfind(s).map(|i| (s, i)))
-                )
-                .collect::<Vec<_>>()
-                .tap_mut(|v| v.sort_by_key(|&(_, i)| i));
-            let digits = digits.iter().filter_map(|(s, _)| str_to_digit(s, &map)).collect::<Vec<_>>();
-
-            let mut digits = digits.iter();
-            let first = digits.next().unwrap();
-            let last = digits.last().unwrap_or(first);
-            first * 10 + last
+                .min_by_key(|&(_, i)| i)
+                .map(|(s, _)| s)
+                .unwrap();
+            let last_str = strs
+                .iter()
+                .filter_map(|s| line.rfind(s).map(|i| (s, i)))
+                .max_by_key(|&(_, i)| i)
+                .map(|(s, _)| s)
+                .unwrap();
+            let first_digit = str_to_digit(first_str, &map).unwrap();
+            let last_digit = str_to_digit(last_str, &map).unwrap();
+            first_digit * 10 + last_digit
         })
         .collect()
 }
