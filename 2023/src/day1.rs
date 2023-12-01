@@ -57,7 +57,6 @@ fn parse_p2(input: &str) -> Vec<u32> {
                 .tap_mut(|v| v.sort_by_key(|&(_, i)| i));
             let digits = digits.iter().filter_map(|(s, _)| str_to_digit(s, &map)).collect::<Vec<_>>();
 
-            println!("{} {:?}", line, digits);
             let mut digits = digits.iter();
             let first = digits.next().unwrap();
             let last = digits.last().unwrap_or(first);
