@@ -17,6 +17,10 @@ impl Set {
     fn lte(&self, rhs: &Set) -> bool {
         self.r <= rhs.r && self.g <= rhs.g && self.b <= rhs.b
     }
+
+    fn product(self) -> u32 {
+        self.r as u32 * self.g as u32 * self.b as u32
+    }
 }
 
 impl FromStr for Set {
@@ -53,6 +57,15 @@ impl Game {
     fn is_possible(&self, set: &Set) -> bool {
         self.sets.iter().all(|iset| iset.lte(&set))
     }
+
+    fn smallest_set(&self) -> Set {
+        self.sets.iter().fold(Set::new(0, 0, 0), |mut set, iset| {
+            set.r = std::cmp::max(set.r, iset.r);
+            set.g = std::cmp::max(set.g, iset.g);
+            set.b = std::cmp::max(set.b, iset.b);
+            set
+        })
+    }
 }
 
 impl FromStr for Game {
@@ -81,19 +94,23 @@ fn parse(input: &str) -> Vec<Game> {
 }
 
 #[aoc(day2, part1)]
-fn part1(input: &[Game]) -> usize {
+fn part1(input: &[Game]) -> u32 {
     let set = Set::new(12, 13, 14);
     input
         .iter()
         .filter(|game| game.is_possible(&set))
-        .map(|game| game.id as usize)
+        .map(|game| game.id as u32)
         .sum()
 }
 
-// #[aoc(day2, part2)]
-// fn part2(input: &str) -> String {
-//     todo!()
-// }
+#[aoc(day2, part2)]
+fn part2(input: &[Game]) -> u32 {
+    input
+        .iter()
+        .map(Game::smallest_set)
+        .map(Set::product)
+        .sum()
+}
 
 #[cfg(test)]
 mod tests {
@@ -130,8 +147,8 @@ mod tests {
         assert_eq!(part1(&parse(INPUT)), 8);
     }
 
-    // #[test]
-    // fn part2_example() {
-    //     assert_eq!(part2(&parse("<EXAMPLE>")), "<RESULT>");
-    // }
+    #[test]
+    fn part2_example() {
+        assert_eq!(part2(&parse(INPUT)), 2286);
+    }
 }
