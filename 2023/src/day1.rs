@@ -22,19 +22,17 @@ fn char_to_digit(c: char) -> Option<u32> {
 
 #[aoc_generator(day1, part2)]
 fn parse_p2(input: &str) -> Vec<u32> {
-    let map = {
-        let mut m = HashMap::new();
-        m.insert("one", 1);
-        m.insert("two", 2);
-        m.insert("three", 3);
-        m.insert("four", 4);
-        m.insert("five", 5);
-        m.insert("six", 6);
-        m.insert("seven", 7);
-        m.insert("eight", 8);
-        m.insert("nine", 9);
-        m
-    };
+    let map = HashMap::from([
+        ("one", 1),
+        ("two", 2),
+        ("three", 3),
+        ("four", 4),
+        ("five", 5),
+        ("six", 6),
+        ("seven", 7),
+        ("eight", 8),
+        ("nine", 9),
+    ]);
 
     let tens_re = format!("({}|[0-9])", map.keys().join_with("|"));
     let ones_re = format!("^.*{}", tens_re);
