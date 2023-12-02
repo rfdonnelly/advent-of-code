@@ -1,4 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
+use joinery::JoinableIterator;
+use regex::Regex;
 use std::collections::HashMap;
 
 #[aoc_generator(day1, part1)]
@@ -34,30 +36,29 @@ fn parse_p2(input: &str) -> Vec<u32> {
         m
     };
 
-    let strs: Vec<String> = map
-        .keys()
-        .map(|k| k.to_string())
-        .chain((0..=9).map(|i| i.to_string()))
-        .collect();
+    let tens_re = format!("({}|[0-9])", map.keys().join_with("|"));
+    let ones_re = format!("^.*{}", tens_re);
+
+    let regexes = [Regex::new(&ones_re).unwrap(), Regex::new(&tens_re).unwrap()];
 
     input
         .lines()
         .map(|line| {
-            let first_str = strs
+            regexes
                 .iter()
-                .filter_map(|s| line.find(s).map(|i| (s, i)))
-                .min_by_key(|&(_, i)| i)
-                .map(|(s, _)| s)
-                .unwrap();
-            let last_str = strs
-                .iter()
-                .filter_map(|s| line.rfind(s).map(|i| (s, i)))
-                .max_by_key(|&(_, i)| i)
-                .map(|(s, _)| s)
-                .unwrap();
-            let first_digit = str_to_digit(first_str, &map).unwrap();
-            let last_digit = str_to_digit(last_str, &map).unwrap();
-            first_digit * 10 + last_digit
+                .map(|re| {
+                    let value = re
+                        .captures_iter(line)
+                        .next()
+                        .unwrap()
+                        .get(1)
+                        .unwrap()
+                        .as_str();
+                    str_to_digit(value, &map).unwrap()
+                })
+                .enumerate()
+                .map(|(i, digit)| digit * 10_u32.pow(i as u32))
+                .sum()
         })
         .collect()
 }
