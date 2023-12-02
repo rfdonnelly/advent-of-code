@@ -66,6 +66,10 @@ impl Game {
             set
         })
     }
+
+    fn id(&self) -> u32 {
+        self.id as u32
+    }
 }
 
 impl FromStr for Game {
@@ -96,20 +100,14 @@ fn parse(input: &str) -> Vec<Game> {
 #[aoc(day2, part1)]
 fn part1(input: &[Game]) -> u32 {
     let set = Set::new(12, 13, 14);
-    input
-        .iter()
-        .filter(|game| game.is_possible(&set))
-        .map(|game| game.id as u32)
-        .sum()
+    let is_possible = |game: &&Game| -> bool { game.is_possible(&set) };
+
+    input.iter().filter(is_possible).map(Game::id).sum()
 }
 
 #[aoc(day2, part2)]
 fn part2(input: &[Game]) -> u32 {
-    input
-        .iter()
-        .map(Game::smallest_set)
-        .map(Set::product)
-        .sum()
+    input.iter().map(Game::smallest_set).map(Set::product).sum()
 }
 
 #[cfg(test)]
