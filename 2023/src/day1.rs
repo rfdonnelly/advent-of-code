@@ -1,6 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use std::collections::HashMap;
-use tap::Tap;
 
 #[aoc_generator(day1, part1)]
 fn parse_p1(input: &str) -> Vec<u32> {
