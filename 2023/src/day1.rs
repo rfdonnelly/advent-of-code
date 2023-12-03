@@ -1,6 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use regex::Regex;
-// use regex_automata::{dense, DFA};
 
 use std::str::FromStr;
 
@@ -24,7 +23,7 @@ fn char_to_digit(c: char) -> Option<u32> {
 #[aoc_generator(day1, part2)]
 fn parse_p2(input: &str) -> Vec<u32> {
     let tens_re = "(one|two|three|four|five|six|seven|eight|nine|[0-9])";
-    let ones_re = format!("^.*{}", tens_re);
+    let ones_re = "(enin|thgie|neves|xis|evif|ruof|eerht|owt|eno|[0-9])";
 
     let regexes = [Regex::new(&ones_re).unwrap(), Regex::new(&tens_re).unwrap()];
 
@@ -33,14 +32,22 @@ fn parse_p2(input: &str) -> Vec<u32> {
         .map(|line| {
             regexes
                 .iter()
-                .map(|re| {
+                .enumerate()
+                .map(|(i, re)| {
+                    let line = if i == 0 {
+                        line.chars().rev().collect::<String>()
+                    } else {
+                        line.to_string()
+                    };
+
                     let value = re
-                        .captures_iter(line)
+                        .captures_iter(&line)
                         .next()
                         .unwrap()
                         .get(1)
                         .unwrap()
                         .as_str();
+
                     Digit::from_str(value).unwrap().0
                 })
                 .enumerate()
@@ -56,8 +63,7 @@ impl FromStr for Digit {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let digit =
-        match s {
+        let digit = match s {
             "0" => 0,
             "1" => 1,
             "2" => 2,
@@ -77,6 +83,15 @@ impl FromStr for Digit {
             "seven" => 7,
             "eight" => 8,
             "nine" => 9,
+            "enin" => 9,
+            "thgie" => 8,
+            "neves" => 7,
+            "xis" => 6,
+            "evif" => 5,
+            "ruof" => 4,
+            "eerht" => 3,
+            "owt" => 2,
+            "eno" => 1,
             _ => unreachable!(),
         };
         Ok(Self(digit))
