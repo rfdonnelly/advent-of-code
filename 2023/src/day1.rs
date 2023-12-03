@@ -40,10 +40,7 @@ fn parse_p2(input: &str) -> Vec<u32> {
                         line.to_string()
                     };
 
-                    let value = re
-                        .find(&line)
-                        .unwrap()
-                        .as_str();
+                    let value = re.find(&line).unwrap().as_str();
 
                     let digit = Digit::from_str(value).unwrap().0;
 
