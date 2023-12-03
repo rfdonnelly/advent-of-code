@@ -29,7 +29,7 @@ impl FromStr for Set {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut set = [0; 3];
         for cube in s.split(", ") {
-            let (count, color) = cube.split_once(" ").unwrap();
+            let (count, color) = cube.split_once(' ').unwrap();
             let count = count.parse().unwrap();
             let index = match color {
                 "red" => 0,
@@ -55,7 +55,7 @@ struct Game {
 
 impl Game {
     fn is_possible(&self, set: &Set) -> bool {
-        self.sets.iter().all(|iset| iset.lte(&set))
+        self.sets.iter().all(|iset| iset.lte(set))
     }
 
     fn smallest_set(&self) -> Set {
@@ -77,7 +77,7 @@ impl FromStr for Game {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (game, sets) = s.split_once(": ").unwrap();
-        let (_, id) = game.split_once(" ").unwrap();
+        let (_, id) = game.split_once(' ').unwrap();
         let id = id.parse().unwrap();
         let sets = sets
             .split("; ")
