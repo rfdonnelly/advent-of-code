@@ -52,7 +52,6 @@ impl Point {
 #[aoc_generator(day3)]
 fn parse(input: &str) -> Schematic {
     let cols = input.find('\n').unwrap() + 1;
-    dbg!(&cols);
     let numbers = Regex::new(r"\d+").unwrap();
     let symbols = Regex::new(r"[^\d\.\n]").unwrap();
 
