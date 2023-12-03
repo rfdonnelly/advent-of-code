@@ -41,10 +41,7 @@ fn parse_p2(input: &str) -> Vec<u32> {
                     };
 
                     let value = re
-                        .captures_iter(&line)
-                        .next()
-                        .unwrap()
-                        .get(1)
+                        .find(&line)
                         .unwrap()
                         .as_str();
 
