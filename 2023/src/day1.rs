@@ -45,10 +45,10 @@ fn parse_p2(input: &str) -> Vec<u32> {
                         .unwrap()
                         .as_str();
 
-                    Digit::from_str(value).unwrap().0
+                    let digit = Digit::from_str(value).unwrap().0;
+
+                    digit * 10_u32.pow(i as u32)
                 })
-                .enumerate()
-                .map(|(i, digit)| digit * 10_u32.pow(i as u32))
                 .sum()
         })
         .collect()
