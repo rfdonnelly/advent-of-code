@@ -91,8 +91,22 @@ fn part1(input: &Schematic) -> u64 {
 }
 
 #[aoc(day3, part2)]
-fn part2(input: &Schematic) -> String {
-    todo!()
+fn part2(input: &Schematic) -> u64 {
+    input
+        .symbols
+        .iter()
+        .filter(|symbol| symbol.value == '*')
+        .map(|symbol| {
+            input
+                .numbers
+                .iter()
+                .filter(|number| number.is_adjacent(symbol))
+                .map(|number| number.value)
+                .collect::<Vec<_>>()
+        })
+        .filter(|numbers| numbers.len() == 2)
+        .map(|numbers| numbers.iter().product::<u64>())
+        .sum()
 }
 
 #[cfg(test)]
@@ -121,6 +135,6 @@ mod tests {
 
     #[test]
     fn part2_example() {
-        // assert_eq!(part2(&parse("<EXAMPLE>")), "<RESULT>");
+        assert_eq!(part2(&parse(INPUT)), 467835);
     }
 }
