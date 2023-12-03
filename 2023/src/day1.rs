@@ -20,12 +20,16 @@ fn char_to_digit(c: char) -> Option<u32> {
     c.to_digit(10)
 }
 
+// Search forwards for first (tens) digit by finding the first occurence of pattern.
+// Search "backwards" for last (ones) digit by finding the first occurence of reversed pattern on
+// reversed haystack.  Instead of reversing the match, we simply added reversed versions of the
+// possible matches to Digit::from_str.
 #[aoc_generator(day1, part2)]
 fn parse_p2(input: &str) -> Vec<u32> {
-    let tens_re = "(one|two|three|four|five|six|seven|eight|nine|[0-9])";
-    let ones_re = "(enin|thgie|neves|xis|evif|ruof|eerht|owt|eno|[0-9])";
+    let tens_pat = "(one|two|three|four|five|six|seven|eight|nine|[0-9])";
+    let ones_pat = "(enin|thgie|neves|xis|evif|ruof|eerht|owt|eno|[0-9])";
 
-    let regexes = [Regex::new(&ones_re).unwrap(), Regex::new(&tens_re).unwrap()];
+    let regexes = [Regex::new(ones_pat).unwrap(), Regex::new(tens_pat).unwrap()];
 
     input
         .lines()
