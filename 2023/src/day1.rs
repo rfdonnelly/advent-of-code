@@ -1,7 +1,8 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use joinery::JoinableIterator;
 use regex::Regex;
-use std::collections::HashMap;
+// use regex_automata::{dense, DFA};
+
+use std::str::FromStr;
 
 #[aoc_generator(day1, part1)]
 fn parse_p1(input: &str) -> Vec<u32> {
@@ -22,19 +23,7 @@ fn char_to_digit(c: char) -> Option<u32> {
 
 #[aoc_generator(day1, part2)]
 fn parse_p2(input: &str) -> Vec<u32> {
-    let map = HashMap::from([
-        ("one", 1),
-        ("two", 2),
-        ("three", 3),
-        ("four", 4),
-        ("five", 5),
-        ("six", 6),
-        ("seven", 7),
-        ("eight", 8),
-        ("nine", 9),
-    ]);
-
-    let tens_re = format!("({}|[0-9])", map.keys().join_with("|"));
+    let tens_re = "(one|two|three|four|five|six|seven|eight|nine|[0-9])";
     let ones_re = format!("^.*{}", tens_re);
 
     let regexes = [Regex::new(&ones_re).unwrap(), Regex::new(&tens_re).unwrap()];
@@ -52,7 +41,7 @@ fn parse_p2(input: &str) -> Vec<u32> {
                         .get(1)
                         .unwrap()
                         .as_str();
-                    str_to_digit(value, &map).unwrap()
+                    Digit::from_str(value).unwrap().0
                 })
                 .enumerate()
                 .map(|(i, digit)| digit * 10_u32.pow(i as u32))
@@ -61,10 +50,37 @@ fn parse_p2(input: &str) -> Vec<u32> {
         .collect()
 }
 
-fn str_to_digit(s: &str, map: &HashMap<&str, u32>) -> Option<u32> {
-    map.get(s)
-        .copied()
-        .or_else(|| s.chars().next().unwrap().to_digit(10))
+struct Digit(u32);
+
+impl FromStr for Digit {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let digit =
+        match s {
+            "one" => 1,
+            "two" => 2,
+            "three" => 3,
+            "four" => 4,
+            "five" => 5,
+            "six" => 6,
+            "seven" => 7,
+            "eight" => 8,
+            "nine" => 9,
+            "0" => 0,
+            "1" => 1,
+            "2" => 2,
+            "3" => 3,
+            "4" => 4,
+            "5" => 5,
+            "6" => 6,
+            "7" => 7,
+            "8" => 8,
+            "9" => 9,
+            _ => unreachable!(),
+        };
+        Ok(Self(digit))
+    }
 }
 
 #[aoc(day1, part1)]
