@@ -42,8 +42,8 @@ impl Point {
     }
 
     fn is_adjacent(&self, rhs: &Self) -> bool {
-        let y_diff = (rhs.y as isize - self.y as isize).abs();
-        let x_diff = (rhs.x as isize - self.x as isize).abs();
+        let y_diff = rhs.y.abs_diff(self.y);
+        let x_diff = rhs.x.abs_diff(self.x);
 
         y_diff <= 1 && x_diff <= 1
     }
