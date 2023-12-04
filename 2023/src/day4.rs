@@ -1,9 +1,9 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use std::str::FromStr;
 use std::collections::HashSet;
+use std::str::FromStr;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 struct Card {
     id: u8,
     winning: Vec<u8>,
@@ -58,19 +58,25 @@ fn parse(input: &str) -> Vec<Card> {
         .collect::<Result<_, _>>()
         .unwrap()
 }
-
 #[aoc(day4, part1)]
 fn part1(input: &[Card]) -> u32 {
-    input
-        .iter()
-        .map(Card::count_winning)
-        .map(score)
-        .sum()
+    input.iter().map(Card::count_winning).map(score).sum()
 }
 
 #[aoc(day4, part2)]
-fn part2(input: &[Card]) -> u32 {
-    todo!()
+fn part2(input: &[Card]) -> usize {
+    input
+        .iter()
+        .map(Card::count_winning)
+        .enumerate()
+        .fold(vec![1; input.len()], |mut counts, (i, count)| {
+            let start_idx = i + 1;
+            let end_idx = start_idx + count as usize;
+            (start_idx..end_idx).for_each(|idx| counts[idx] += counts[i]);
+            counts
+        })
+        .iter()
+        .sum()
 }
 
 #[cfg(test)]
@@ -113,6 +119,6 @@ mod tests {
 
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse(INPUT)), 467835);
+        assert_eq!(part2(&parse(INPUT)), 30);
     }
 }
