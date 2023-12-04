@@ -1,18 +1,17 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use std::collections::HashSet;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 struct Card {
     id: u8,
-    winning: HashSet<u8>,
-    have: HashSet<u8>,
+    winning: u128,
+    have: u128,
 }
 
 impl Card {
     fn count_winning(&self) -> u8 {
-        self.winning.intersection(&self.have).count() as u8
+        (self.winning & self.have).count_ones() as u8
     }
 }
 
@@ -28,13 +27,13 @@ impl FromStr for Card {
         let winning = winning
             .split_ascii_whitespace()
             .map(u8::from_str)
-            .collect::<Result<_, _>>()
-            .unwrap();
+            .map(Result::unwrap)
+            .fold(0_u128, |bitvec, value| bitvec | 1 << value);
         let have = have
             .split_ascii_whitespace()
             .map(u8::from_str)
-            .collect::<Result<_, _>>()
-            .unwrap();
+            .map(Result::unwrap)
+            .fold(0_u128, |bitvec, value| bitvec | 1 << value);
 
         Ok(Self { id, winning, have })
     }
@@ -98,13 +97,27 @@ mod tests {
         let expected = vec![
             Card {
                 id: 1,
-                winning: HashSet::from([41, 48, 83, 86, 17]),
-                have: HashSet::from([83, 86, 6, 31, 17, 9, 48, 53]),
+                winning: 1u128 << 41 | 1u128 << 48 | 1u128 << 83 | 1u128 << 86 | 1u128 << 17,
+                have: 1u128 << 83
+                    | 1u128 << 86
+                    | 1u128 << 6
+                    | 1u128 << 31
+                    | 1u128 << 17
+                    | 1u128 << 9
+                    | 1u128 << 48
+                    | 1u128 << 53,
             },
             Card {
                 id: 2,
-                winning: HashSet::from([13, 32, 20, 16, 61]),
-                have: HashSet::from([61, 30, 68, 82, 17, 32, 24, 19]),
+                winning: 1u128 << 13 | 1u128 << 32 | 1u128 << 20 | 1u128 << 16 | 1u128 << 61,
+                have: 1u128 << 61
+                    | 1u128 << 30
+                    | 1u128 << 68
+                    | 1u128 << 82
+                    | 1u128 << 17
+                    | 1u128 << 32
+                    | 1u128 << 24
+                    | 1u128 << 19,
             },
         ];
         assert_eq!(parse(&input), expected);
