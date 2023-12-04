@@ -3,7 +3,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 use std::collections::HashSet;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 struct Card {
     id: u8,
     winning: HashSet<u8>,
