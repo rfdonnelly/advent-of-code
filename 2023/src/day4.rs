@@ -6,15 +6,13 @@ use std::str::FromStr;
 #[derive(Debug, PartialEq, Clone)]
 struct Card {
     id: u8,
-    winning: Vec<u8>,
-    have: Vec<u8>,
+    winning: HashSet<u8>,
+    have: HashSet<u8>,
 }
 
 impl Card {
     fn count_winning(&self) -> u8 {
-        let winning: HashSet<u8> = HashSet::from_iter(self.winning.iter().copied());
-        let have: HashSet<u8> = HashSet::from_iter(self.have.iter().copied());
-        winning.intersection(&have).count() as u8
+        self.winning.intersection(&self.have).count() as u8
     }
 }
 
@@ -100,13 +98,13 @@ mod tests {
         let expected = vec![
             Card {
                 id: 1,
-                winning: vec![41, 48, 83, 86, 17],
-                have: vec![83, 86, 6, 31, 17, 9, 48, 53],
+                winning: HashSet::from([41, 48, 83, 86, 17]),
+                have: HashSet::from([83, 86, 6, 31, 17, 9, 48, 53]),
             },
             Card {
                 id: 2,
-                winning: vec![13, 32, 20, 16, 61],
-                have: vec![61, 30, 68, 82, 17, 32, 24, 19],
+                winning: HashSet::from([13, 32, 20, 16, 61]),
+                have: HashSet::from([61, 30, 68, 82, 17, 32, 24, 19]),
             },
         ];
         assert_eq!(parse(&input), expected);
