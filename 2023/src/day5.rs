@@ -120,8 +120,17 @@ fn part1(input: &Almanac) -> Number {
 }
 
 #[aoc(day5, part2)]
-fn part2(input: &Almanac) -> u32 {
-    todo!()
+fn part2(input: &Almanac) -> Number {
+    input
+        .seeds
+        .chunks(2)
+        .flat_map(|chunk| {
+            let start = chunk[0];
+            let end = start + chunk[1];
+            (start..end).map(|seed| seed_to_location(&input.maps, seed, "seed"))
+        })
+        .min()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -228,6 +237,6 @@ mod tests {
 
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse(INPUT)), 35);
+        assert_eq!(part2(&parse(INPUT)), 46);
     }
 }
