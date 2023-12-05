@@ -1,6 +1,5 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use std::collections::HashMap;
 use std::str::FromStr;
 
 type Number = u32;
@@ -8,7 +7,7 @@ type Number = u32;
 #[derive(Debug, PartialEq)]
 struct Almanac {
     seeds: Vec<Number>,
-    maps: HashMap<String, Map>,
+    maps: Vec<Map>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -51,11 +50,7 @@ impl FromStr for Almanac {
             .map(Number::from_str)
             .map(Result::unwrap)
             .collect();
-        let maps = paragraphs
-            .map(Map::from_str)
-            .map(Result::unwrap)
-            .map(|map| (map.src.clone(), map))
-            .collect();
+        let maps = paragraphs.map(Map::from_str).map(Result::unwrap).collect();
 
         Ok(Self { seeds, maps })
     }
@@ -102,19 +97,12 @@ fn parse(input: &str) -> Almanac {
     Almanac::from_str(input).unwrap()
 }
 
-fn seed_to_location(maps: &HashMap<String, Map>, src_value: Number, src_type: &str) -> Number {
-    match maps.get(src_type) {
-        None => src_value,
-        Some(map) => seed_to_location(maps, map.map(src_value), &map.dst),
-    }
-}
-
 #[aoc(day5, part1)]
 fn part1(input: &Almanac) -> Number {
     input
         .seeds
         .iter()
-        .map(|&seed| seed_to_location(&input.maps, seed, "seed"))
+        .map(|&seed| input.maps.iter().fold(seed, |value, map| map.map(value)))
         .min()
         .unwrap()
 }
@@ -127,8 +115,9 @@ fn part2(input: &Almanac) -> Number {
         .flat_map(|chunk| {
             let start = chunk[0];
             let end = start + chunk[1];
-            (start..end).map(|seed| seed_to_location(&input.maps, seed, "seed"))
+            start..end
         })
+        .map(|seed| input.maps.iter().fold(seed, |value, map| map.map(value)))
         .min()
         .unwrap()
 }
@@ -180,51 +169,45 @@ mod tests {
         let input = INPUT.split("\n\n").take(3).collect::<Vec<_>>().join("\n\n");
         let expected = Almanac {
             seeds: vec![79, 14, 55, 13],
-            maps: HashMap::from([
-                (
-                    "seed".to_string(),
-                    Map {
-                        src: "seed".to_string(),
-                        dst: "soil".to_string(),
-                        ranges: vec![
-                            Range {
-                                dst: 50,
-                                src: 98,
-                                len: 2,
-                            },
-                            Range {
-                                dst: 52,
-                                src: 50,
-                                len: 48,
-                            },
-                        ],
-                    },
-                ),
-                (
-                    "soil".to_string(),
-                    Map {
-                        src: "soil".to_string(),
-                        dst: "fertilizer".to_string(),
-                        ranges: vec![
-                            Range {
-                                dst: 0,
-                                src: 15,
-                                len: 37,
-                            },
-                            Range {
-                                dst: 37,
-                                src: 52,
-                                len: 2,
-                            },
-                            Range {
-                                dst: 39,
-                                src: 0,
-                                len: 15,
-                            },
-                        ],
-                    },
-                ),
-            ]),
+            maps: vec![
+                Map {
+                    src: "seed".to_string(),
+                    dst: "soil".to_string(),
+                    ranges: vec![
+                        Range {
+                            dst: 50,
+                            src: 98,
+                            len: 2,
+                        },
+                        Range {
+                            dst: 52,
+                            src: 50,
+                            len: 48,
+                        },
+                    ],
+                },
+                Map {
+                    src: "soil".to_string(),
+                    dst: "fertilizer".to_string(),
+                    ranges: vec![
+                        Range {
+                            dst: 0,
+                            src: 15,
+                            len: 37,
+                        },
+                        Range {
+                            dst: 37,
+                            src: 52,
+                            len: 2,
+                        },
+                        Range {
+                            dst: 39,
+                            src: 0,
+                            len: 15,
+                        },
+                    ],
+                },
+            ],
         };
 
         assert_eq!(parse(&input), expected);
