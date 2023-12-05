@@ -114,7 +114,7 @@ fn part1(input: &Almanac) -> Number {
     input
         .seeds
         .iter()
-        .map(|seed| seed_to_location(&input.maps, seed.clone(), "seed"))
+        .map(|&seed| seed_to_location(&input.maps, seed, "seed"))
         .min()
         .unwrap()
 }
