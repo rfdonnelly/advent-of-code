@@ -113,8 +113,8 @@ fn part2(input: &Almanac) -> Number {
         .seeds
         .chunks(2)
         .flat_map(|chunk| {
-            let start = chunk[0];
-            let end = start + chunk[1];
+            let &[start, len] = chunk else { unreachable!() };
+            let end = start + len;
             start..end
         })
         .map(|seed| input.maps.iter().fold(seed, |value, map| map.map(value)))
