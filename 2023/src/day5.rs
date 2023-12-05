@@ -10,6 +10,12 @@ struct Almanac {
     maps: Vec<Map>,
 }
 
+impl Almanac {
+    fn map_seed(&self, seed: Number) -> Number {
+        self.maps.iter().fold(seed, |value, map| map.map(value))
+    }
+}
+
 #[derive(Debug, PartialEq)]
 struct Map {
     src: String,
@@ -102,9 +108,15 @@ fn part1(input: &Almanac) -> Number {
     input
         .seeds
         .iter()
-        .map(|&seed| input.maps.iter().fold(seed, |value, map| map.map(value)))
+        .map(|&seed| input.map_seed(seed))
         .min()
         .unwrap()
+}
+
+fn chunk_to_range(chunk: &[Number]) -> std::ops::Range<Number> {
+    let &[start, len] = chunk else { unreachable!() };
+    let end = start + len;
+    start..end
 }
 
 #[aoc(day5, part2)]
@@ -112,12 +124,8 @@ fn part2(input: &Almanac) -> Number {
     input
         .seeds
         .chunks(2)
-        .flat_map(|chunk| {
-            let &[start, len] = chunk else { unreachable!() };
-            let end = start + len;
-            start..end
-        })
-        .map(|seed| input.maps.iter().fold(seed, |value, map| map.map(value)))
+        .flat_map(chunk_to_range)
+        .map(|seed| input.map_seed(seed))
         .min()
         .unwrap()
 }
