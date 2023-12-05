@@ -2,7 +2,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 use std::str::FromStr;
 
-type Number = u32;
+type Number = u64;
 
 #[derive(Debug, PartialEq)]
 struct Almanac {
