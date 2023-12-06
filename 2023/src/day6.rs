@@ -2,7 +2,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 use std::str::FromStr;
 
-type Num = u16;
+type Num = u64;
 
 #[derive(Debug, PartialEq)]
 struct Race {
@@ -27,8 +27,8 @@ impl Race {
     }
 }
 
-#[aoc_generator(day6)]
-fn parse(input: &str) -> Vec<Race> {
+#[aoc_generator(day6, part1)]
+fn parse_p1(input: &str) -> Vec<Race> {
     let mut values = input.lines().map(|line| {
         line.split_ascii_whitespace()
             .map(Num::from_str)
@@ -44,15 +44,31 @@ fn parse(input: &str) -> Vec<Race> {
         .collect()
 }
 
+#[aoc_generator(day6, part2)]
+fn parse_p2(input: &str) -> Race {
+    let mut values = input.lines().map(|line| {
+        line.split_ascii_whitespace()
+            .skip(1)
+            .flat_map(|token| token.chars())
+            .collect::<String>()
+            .parse()
+            .unwrap()
+    });
+
+    let time = values.next().unwrap();
+    let dist = values.next().unwrap();
+
+    Race { time, dist }
+}
+
 #[aoc(day6, part1)]
 fn part1(input: &[Race]) -> usize {
-    dbg!(&input);
     input.iter().map(Race::winning_combinations).product()
 }
 
 #[aoc(day6, part2)]
-fn part2(input: &[Race]) -> Num {
-    todo!()
+fn part2(input: &Race) -> usize {
+    input.winning_combinations()
 }
 
 #[cfg(test)]
@@ -69,16 +85,19 @@ mod tests {
     #[test]
     fn test_parse() {
         let expected = vec![Race::new(7, 9), Race::new(15, 40), Race::new(30, 200)];
-        assert_eq!(parse(INPUT), expected);
+        assert_eq!(parse_p1(INPUT), expected);
+
+        let expected = Race::new(71530, 940200);
+        assert_eq!(parse_p2(INPUT), expected);
     }
 
     #[test]
     fn part1_example() {
-        assert_eq!(part1(&parse(INPUT)), 288);
+        assert_eq!(part1(&parse_p1(INPUT)), 288);
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse(INPUT)), 46);
+        assert_eq!(part2(&parse_p2(INPUT)), 71503);
     }
 }
