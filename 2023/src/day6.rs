@@ -27,8 +27,9 @@ impl Race {
 fn parse_p1(input: &str) -> Vec<Race> {
     let mut values = input.lines().map(|line| {
         line.split_ascii_whitespace()
+            .skip(1)
             .map(Num::from_str)
-            .filter_map(Result::ok)
+            .map(Result::unwrap)
     });
 
     let times = values.next().unwrap();
