@@ -46,7 +46,7 @@ fn parse_p2(input: &str) -> Race {
     let mut values = input.lines().map(|line| {
         line.split_ascii_whitespace()
             .skip(1)
-            .flat_map(|token| token.chars())
+            .flat_map(str::chars)
             .collect::<String>()
             .parse()
             .unwrap()
