@@ -11,10 +11,6 @@ struct Race {
 }
 
 impl Race {
-    fn new(time: Num, dist: Num) -> Self {
-        Self { time, dist }
-    }
-
     fn winning_combinations(&self) -> usize {
         (1..self.time)
             .map(|hold_time| {
@@ -81,6 +77,12 @@ mod tests {
         Time:      7  15   30
         Distance:  9  40  200
     "};
+
+    impl Race {
+        fn new(time: Num, dist: Num) -> Self {
+            Self { time, dist }
+        }
+    }
 
     #[test]
     fn test_parse() {
