@@ -11,15 +11,16 @@ struct Race {
 }
 
 impl Race {
-    fn winning_combinations(&self) -> usize {
-        (1..self.time)
-            .map(|hold_time| {
-                let velocity = hold_time;
-                let remaining_time = self.time - hold_time;
-                velocity * remaining_time
-            })
-            .filter(|&dist| dist > self.dist)
-            .count()
+    fn winning_combinations(&self) -> Num {
+        let t = self.time;
+        let d = self.dist;
+        // v^2 - tv + d = 0
+        // v = (t ± sqrt(t^2 - 4d))/2
+        let sqrt_inner = t.pow(2) - 4 * d;
+        let sqrt_outer = f64::sqrt(sqrt_inner as f64);
+        let v0 = ((t as f64 - sqrt_outer) / 2.0).floor() as u64 + 1;
+        let v1 = ((t as f64 + sqrt_outer) / 2.0).ceil() as u64 - 1;
+        v1 - v0 + 1
     }
 }
 
@@ -59,12 +60,12 @@ fn parse_p2(input: &str) -> Race {
 }
 
 #[aoc(day6, part1)]
-fn part1(input: &[Race]) -> usize {
+fn part1(input: &[Race]) -> Num {
     input.iter().map(Race::winning_combinations).product()
 }
 
 #[aoc(day6, part2)]
-fn part2(input: &Race) -> usize {
+fn part2(input: &Race) -> Num {
     input.winning_combinations()
 }
 
