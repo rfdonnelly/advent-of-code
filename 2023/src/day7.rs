@@ -2,7 +2,6 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::str::FromStr;
 
 use tap::Tap;
 
@@ -27,10 +26,16 @@ impl PartialOrd for Card {
 }
 
 impl Card {
-    fn new(label: char) -> Self {
+    fn new(label: char, jokers_wild: bool) -> Self {
         let strength = label.to_digit(10).unwrap_or_else(|| match label {
             'T' => 10,
-            'J' => 1,
+            'J' => {
+                if jokers_wild {
+                    1
+                } else {
+                    11
+                }
+            }
             'Q' => 12,
             'K' => 13,
             'A' => 14,
@@ -46,27 +51,7 @@ struct Hand {
     cards: Vec<Card>,
     counts: HashMap<Card, Num>,
     bid: Num,
-}
-
-impl FromStr for Hand {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (cards, bid) = s.split_once(' ').unwrap();
-        let cards = cards.chars().map(Card::new).collect::<Vec<_>>();
-        let counts = cards
-            .iter()
-            .copied()
-            .fold(HashMap::new(), |mut hash, card| {
-                hash.entry(card)
-                    .and_modify(|count| *count += 1)
-                    .or_insert(1);
-                hash
-            });
-        let bid = bid.parse().unwrap();
-
-        Ok(Self { cards, counts, bid })
-    }
+    jokers_wild: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -83,50 +68,87 @@ enum Type {
 
 impl Hand {
     fn n_of_a_kind(&self, n: Num) -> bool {
-        self.counts
-            .iter()
-            .filter(|(&card, _)| card != Card::new('J'))
-            .any(|(_, count)| *count == n)
+        if self.jokers_wild {
+            self.counts
+                .iter()
+                .filter(|(&card, _)| card != Card::new('J', self.jokers_wild))
+                .any(|(_, count)| *count == n)
+        } else {
+            self.counts.iter().any(|(_, count)| *count == n)
+        }
     }
 
-    fn n_jokers(&self) -> Num {
-        *self.counts.get(&Card::new('J')).unwrap_or(&0) as Num
+    fn n_wild(&self) -> Num {
+        if self.jokers_wild {
+            *self
+                .counts
+                .get(&Card::new('J', self.jokers_wild))
+                .unwrap_or(&0) as Num
+        } else {
+            0
+        }
     }
 
     fn n_pairs(&self) -> Num {
-        self.counts
-            .iter()
-            .filter(|(&card, &count)| card != Card::new('J') && count == 2)
-            .count() as Num
+        if self.jokers_wild {
+            self.counts
+                .iter()
+                .filter(|(&card, &count)| card != Card::new('J', self.jokers_wild) && count == 2)
+                .count() as Num
+        } else {
+            self.counts.iter().count() as Num
+        }
     }
 
     fn type_(&self) -> Type {
-        let n_jokers = self.n_jokers();
+        let n_wild = self.n_wild();
 
-        if n_jokers >= 4 || self.n_of_a_kind(5 - n_jokers) {
+        if n_wild >= 4 || self.n_of_a_kind(5 - n_wild) {
             Type::FiveOfAKind
-        } else if n_jokers == 3 || self.n_of_a_kind(4 - n_jokers) {
-            // 3 jokers
-            // 2 jokers + 2oaK
-            // 1 joker + 3oaK
+        } else if n_wild == 3 || self.n_of_a_kind(4 - n_wild) {
             Type::FourOfAKind
         } else {
-            if n_jokers == 2 && self.n_of_a_kind(2) && self.n_of_a_kind(1)
-                || n_jokers == 1 && self.n_pairs() == 2
+            if n_wild == 2 && self.n_of_a_kind(2) && self.n_of_a_kind(1)
+                || n_wild == 1 && self.n_pairs() == 2
                 || self.n_of_a_kind(3) && self.n_of_a_kind(2)
             {
                 Type::FullHouse
-            } else if n_jokers == 2 || self.n_of_a_kind(3 - n_jokers) {
+            } else if n_wild == 2 || self.n_of_a_kind(3 - n_wild) {
                 Type::ThreeOfAKind
-            } else if self.n_pairs() == 2 - n_jokers {
+            } else if self.n_pairs() == 2 - n_wild {
                 Type::TwoPair
-            } else if self.n_pairs() == 1 || n_jokers == 1 {
+            } else if self.n_pairs() == 1 || n_wild == 1 {
                 Type::OnePair
             } else if self.counts.keys().count() == 5 {
                 Type::HighCard
             } else {
                 Type::None
             }
+        }
+    }
+
+    fn new(s: &str, jokers_wild: bool) -> Self {
+        let (cards, bid) = s.split_once(' ').unwrap();
+        let cards = cards
+            .chars()
+            .map(|c| Card::new(c, jokers_wild))
+            .collect::<Vec<_>>();
+        let counts = cards
+            .iter()
+            .copied()
+            .fold(HashMap::new(), |mut hash, card| {
+                hash.entry(card)
+                    .and_modify(|count| *count += 1)
+                    .or_insert(1);
+                hash
+            });
+        let bid = bid.parse().unwrap();
+
+        Self {
+            cards,
+            counts,
+            bid,
+            jokers_wild,
         }
     }
 }
@@ -146,13 +168,21 @@ impl PartialOrd for Hand {
     }
 }
 
-#[aoc_generator(day7)]
-fn parse(input: &str) -> Vec<Hand> {
+fn parse(input: &str, jokers_wild: bool) -> Vec<Hand> {
     input
         .lines()
-        .map(Hand::from_str)
-        .map(Result::unwrap)
+        .map(|line| Hand::new(line, jokers_wild))
         .collect()
+}
+
+#[aoc_generator(day7, part1)]
+fn parse_p1(input: &str) -> Vec<Hand> {
+    parse(input, false)
+}
+
+#[aoc_generator(day7, part2)]
+fn parse_p2(input: &str) -> Vec<Hand> {
+    parse(input, true)
 }
 
 #[aoc(day7, part1)]
@@ -190,11 +220,11 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(part1(&parse(INPUT)), 6440);
+        assert_eq!(part1(&parse_p1(INPUT)), 6440);
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse(INPUT)), 71503);
+        assert_eq!(part2(&parse_p2(INPUT)), 5905);
     }
 }
