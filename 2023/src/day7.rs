@@ -30,7 +30,7 @@ impl Card {
     fn new(label: char) -> Self {
         let strength = label.to_digit(10).unwrap_or_else(|| match label {
             'T' => 10,
-            'J' => 11,
+            'J' => 1,
             'Q' => 12,
             'K' => 13,
             'A' => 14,
@@ -83,23 +83,44 @@ enum Type {
 
 impl Hand {
     fn n_of_a_kind(&self, n: Num) -> bool {
-        self.counts.iter().any(|(_, count)| *count == n)
+        self.counts
+            .iter()
+            .filter(|(&card, _)| card != Card::new('J'))
+            .any(|(_, count)| *count == n)
+    }
+
+    fn n_jokers(&self) -> Num {
+        *self.counts.get(&Card::new('J')).unwrap_or(&0) as Num
+    }
+
+    fn n_pairs(&self) -> Num {
+        self.counts
+            .iter()
+            .filter(|(&card, &count)| card != Card::new('J') && count == 2)
+            .count() as Num
     }
 
     fn type_(&self) -> Type {
-        if self.n_of_a_kind(5) {
+        let n_jokers = self.n_jokers();
+
+        if n_jokers >= 4 || self.n_of_a_kind(5 - n_jokers) {
             Type::FiveOfAKind
-        } else if self.n_of_a_kind(4) {
+        } else if n_jokers == 3 || self.n_of_a_kind(4 - n_jokers) {
+            // 3 jokers
+            // 2 jokers + 2oaK
+            // 1 joker + 3oaK
             Type::FourOfAKind
         } else {
-            let three_of_a_kind = self.n_of_a_kind(3);
-            if three_of_a_kind && self.n_of_a_kind(2) {
+            if n_jokers == 2 && self.n_of_a_kind(2) && self.n_of_a_kind(1)
+                || n_jokers == 1 && self.n_pairs() == 2
+                || self.n_of_a_kind(3) && self.n_of_a_kind(2)
+            {
                 Type::FullHouse
-            } else if three_of_a_kind {
+            } else if n_jokers == 2 || self.n_of_a_kind(3 - n_jokers) {
                 Type::ThreeOfAKind
-            } else if self.counts.iter().filter(|(_, &count)| count == 2).count() == 2 {
+            } else if self.n_pairs() == 2 - n_jokers {
                 Type::TwoPair
-            } else if self.n_of_a_kind(2) && self.counts.keys().count() == 4 {
+            } else if self.n_pairs() == 1 || n_jokers == 1 {
                 Type::OnePair
             } else if self.counts.keys().count() == 5 {
                 Type::HighCard
@@ -150,7 +171,7 @@ fn part1(input: &[Hand]) -> Num {
 
 #[aoc(day7, part2)]
 fn part2(input: &[Hand]) -> Num {
-    todo!()
+    part1(input)
 }
 
 #[cfg(test)]
