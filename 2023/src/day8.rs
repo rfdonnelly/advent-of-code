@@ -5,6 +5,7 @@ use std::str::FromStr;
 
 use itertools::FoldWhile::{Continue, Done};
 use itertools::Itertools;
+use num::integer::lcm;
 
 type Num = u64;
 
@@ -62,34 +63,71 @@ fn parse(input: &str) -> ParseOutput {
 
 #[aoc(day8, part1)]
 fn part1(input: &SolveInput) -> Num {
-    let (_, count) =
-        input
-            .directions
-            .iter()
-            .cycle()
-            .fold_while(("AAA", 0), |(node, count), direction| {
-                let next_node = input
-                    .nodes
-                    .get(node)
-                    .map(|(l, r)| match direction {
-                        L => l,
-                        R => r,
-                    })
-                    .unwrap();
-                if next_node == "ZZZ" {
-                    Done((next_node, count + 1))
-                } else {
-                    Continue((next_node, count + 1))
-                }
-            })
-            .into_inner();
+    let (_, count) = input
+        .directions
+        .iter()
+        .cycle()
+        .fold_while(("AAA", 0), |(node, count), direction| {
+            let node = input
+                .nodes
+                .get(node)
+                .map(|(l, r)| match direction {
+                    L => l,
+                    R => r,
+                })
+                .unwrap();
+
+            if node == "ZZZ" {
+                Done((node, count + 1))
+            } else {
+                Continue((node, count + 1))
+            }
+        })
+        .into_inner();
 
     count
 }
 
 #[aoc(day8, part2)]
 fn part2(input: &SolveInput) -> Num {
-    todo!()
+    let starting_nodes = input
+        .nodes
+        .keys()
+        .filter(|node| &node[2..3] == "A")
+        .collect::<Vec<_>>();
+
+    let cycle_counts = starting_nodes
+        .iter()
+        .map(|&starting_node| {
+            let (_, count) = input
+                .directions
+                .iter()
+                .cycle()
+                .fold_while((starting_node, 0), |(node, count), direction| {
+                    let node = input
+                        .nodes
+                        .get(node.as_str())
+                        .map(|(l, r)| match direction {
+                            L => l,
+                            R => r,
+                        })
+                        .unwrap();
+
+                    if &node[2..3] == "Z" {
+                        Done((node, count + 1))
+                    } else {
+                        Continue((node, count + 1))
+                    }
+                })
+                .into_inner();
+
+            count
+        })
+        .collect::<Vec<_>>();
+
+    cycle_counts
+        .iter()
+        .fold(cycle_counts[0], |acc, &count| lcm(acc, count))
 }
 
 #[cfg(test)]
@@ -98,7 +136,7 @@ mod tests {
 
     use indoc::indoc;
 
-    const INPUT: &str = indoc! {"
+    const INPUT_P1: &str = indoc! {"
         LLR
 
         AAA = (BBB, BBB)
@@ -106,13 +144,26 @@ mod tests {
         ZZZ = (ZZZ, ZZZ)
     "};
 
+    const INPUT_P2: &str = indoc! {"
+        LR
+
+        11A = (11B, XXX)
+        11B = (XXX, 11Z)
+        11Z = (11B, XXX)
+        22A = (22B, XXX)
+        22B = (22C, 22C)
+        22C = (22Z, 22Z)
+        22Z = (22B, 22B)
+        XXX = (XXX, XXX)
+    "};
+
     #[test]
     fn part1_example() {
-        assert_eq!(part1(&parse(INPUT)), 6);
+        assert_eq!(part1(&parse(INPUT_P1)), 6);
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse(INPUT)), 1);
+        assert_eq!(part2(&parse(INPUT_P2)), 6);
     }
 }
