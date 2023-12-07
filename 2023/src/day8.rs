@@ -126,8 +126,9 @@ fn part2(input: &SolveInput) -> Num {
         .collect::<Vec<_>>();
 
     cycle_counts
-        .iter()
-        .fold(cycle_counts[0], |acc, &count| lcm(acc, count))
+        .into_iter()
+        .reduce(|acc, count| lcm(acc, count))
+        .unwrap()
 }
 
 #[cfg(test)]
