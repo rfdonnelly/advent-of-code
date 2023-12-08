@@ -1,8 +1,8 @@
-use std::process::Command;
-use std::os::unix::process::CommandExt;
+use cargo_util::ProcessBuilder;
 
 fn main() {
-    Command::new("cargo")
+    ProcessBuilder::new("cargo")
         .arg("aoc")
-        .exec();
+        .exec_replace()
+        .unwrap()
 }
